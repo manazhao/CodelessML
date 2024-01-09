@@ -1,0 +1,64 @@
+syntax = "proto3";
+package codeless_ml.ml;
+
+import "codeless_ml/common/callable.proto";
+
+message TensorSliceDataset {
+  // Each dataset_name should refer to a tensor registered in
+  // GLOBAL_VARIABLE_REPOSITORY.
+  repeated string dataset_name = 1;
+}
+
+enum TfDataType {
+  TF_DATA_TYPE_UNSPECIFIED = 0;
+  TF_DATA_TYPE_INT32 = 1;
+  TF_DATA_TYPE_INT64 = 2;
+  TF_DATA_TYPE_STRING = 3;
+  TF_DATA_TYPE_FLOAT32 = 4;
+  TF_DATA_TYPE_FLOAT64 = 5;
+}
+
+message FixedLenFeatureConfig {
+  repeated int32 shape = 1;
+  TfDataType data_type = 3;
+}
+
+message VarLenFeatureConfig { TfDataType data_type = 3; }
+
+message FeatureSpec {
+  string name = 1;
+  oneof specific_feature {
+    FixedLenFeatureConfig fixed_len_feature = 2;
+    VarLenFeatureConfig var_len_feature = 3;
+  }
+}
+
+message TFRecordDataset {
+  string filename = 1;
+  // Specify to parse the features into Tensors. Key is feature name.
+  repeated FeatureSpec feature_spec = 2;
+}
+
+message DatasetConfig {
+  oneof specific_dataset {
+    TensorSliceDataset tensor_slice_dataset = 1;
+    TFRecordDataset tf_record_dataset = 2;
+  }
+
+  int32 batch_size = 3;
+
+  // Buffer size for shuffling. When 0, shuffle is disabled, otherwise a buffer
+  // with the given size will be used for shuffling.
+  int32 shuffle_buffer_size = 4;
+
+  // Each map_fn_name should refer to a callable registered in
+  // GLOBAL_VARIABLE_REPOSITORY.
+  repeated string map_fn_name = 5;
+
+  // Callables registered in GlobalVariableRepository.
+  repeated codeless_ml.common.CallableRegistry map_callable = 6;
+
+  // The number of times of repeating the dataset. When -1, it means repeating
+  // infinitely.
+  int32 repeat = 7;
+}

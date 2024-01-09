@@ -1,0 +1,249 @@
+syntax = "proto3";
+
+package codeless_ml.ml;
+
+import "google/protobuf/any.proto";
+import "codeless_ml/common/callable.proto";
+
+message InputLayer {
+  int32 batch_size = 1;
+  repeated int32 shape = 2;
+  string dtype = 3;
+  bool sparse = 4;
+}
+
+message LambdaLayer {
+  string function_id = 1;
+  repeated int32 output_shape = 2;
+}
+
+enum PaddingType {
+  PADDING_TYPE_UNSPECIFIED = 0;
+  PADDING_TYPE_SAME = 1;
+  PADDING_TYPE_VALID = 2;
+}
+
+enum DataFormat {
+  DATA_FORMAT_UNSPECIFIED = 0;
+  DATA_FORMAT_CHANNELS_LAST = 1;
+  DATA_FORMAT_CHANNELS_FIRST = 2;
+}
+
+enum ActivationType {
+  ACTIVATION_TYPE_UNSPECIFIED = 0;
+  ACTIVATION_TYPE_TAHN = 1;
+  ACTIVATION_TYPE_SOFTMAX = 2;
+  ACTIVATION_TYPE_ELU = 3;
+  ACTIVATION_TYPE_SELU = 4;
+  ACTIVATION_TYPE_SOFTPLUS = 5;
+  ACTIVATION_TYPE_SOFTSIGN = 6;
+  ACTIVATION_TYPE_RELU = 7;
+  ACTIVATION_TYPE_SIGMOID = 8;
+  ACTIVATION_TYPE_HARD_SIGMOID = 9;
+  ACTIVATION_TYPE_EXPONENTIAL = 10;
+  ACTIVATION_TYPE_LINEAR = 11;
+}
+
+message ActivationLayer { ActivationType type = 1; }
+
+message Conv2DLayer {
+  int32 filters = 1;
+  repeated int32 kernel_size = 2;
+  repeated int32 strides = 3;
+  PaddingType padding = 4;
+  DataFormat data_format = 5;
+  bool use_bias = 6;
+  ActivationType activation = 7;
+}
+
+message DenseLayer {
+  int32 units = 1;
+  ActivationType activation = 2;
+  bool use_bias = 3;
+}
+
+message DropoutLayer {
+  float rate = 1;
+  repeated int32 noise_shape = 2;
+  int64 seed = 3;
+}
+
+message EmbeddingLayer {
+  // Vocabulary size. The max value of the input should be input_dim - 1.
+  int32 input_dim = 1;
+  int32 output_dim = 2;
+  int32 input_length = 3;
+}
+
+message FlattenLayer {}
+
+message GlobalAveragePooling1DLayer {}
+
+message MaxPooling2DLayer {
+  repeated int32 pool_size = 1;
+  repeated int32 strides = 2;
+  PaddingType padding = 3;
+  DataFormat data_format = 4;
+}
+
+message TextVectorizationLayer {
+  int32 max_tokens = 1;
+  oneof standardize {
+    string predefined_standardize = 2;
+    codeless_ml.common.CallableRegistry customized_standardize = 3;
+  }
+  string split = 4;
+  string output_mode = 5;
+  repeated string vocab = 6;
+}
+
+message ZeroPadding2DLayer {
+  repeated int32 padding = 1;
+  DataFormat data_format = 2;
+}
+
+message L2NormalizationLayer { float gamma_init = 1; }
+
+message LayerConfig {
+  string name = 1;
+  repeated string dependency = 2;
+  bool is_output = 3;
+  oneof specific_layer {
+    InputLayer input = 4;
+    Conv2DLayer conv_2d = 5;
+    MaxPooling2DLayer max_pooling_2d = 6;
+    ActivationLayer activation = 7;
+    ZeroPadding2DLayer zero_padding_2d = 8;
+    L2NormalizationLayer l2_normalization = 9;
+    DenseLayer dense = 10;
+    FlattenLayer flatten = 11;
+    DropoutLayer dropout = 12;
+    EmbeddingLayer embedding = 13;
+    GlobalAveragePooling1DLayer global_average_pooling_1d = 14;
+    TextVectorizationLayer text_vectorization = 15;
+  }
+}
+
+message SgdOptimizer {
+  float lr = 1;
+  float weight_decay = 2;
+  float momentum = 3;
+  bool nesterov = 4;
+}
+
+message RMSpropOptimizer {
+  float lr = 1;
+  float rho = 2;
+  float epsilon = 3;
+  float weight_decay = 4;
+}
+
+message AdagradOptimizer {
+  float lr = 1;
+  float epsilon = 2;
+  float weight_decay = 3;
+}
+
+message AdadeltaOptimizer {
+  float lr = 1;
+  float rho = 2;
+  float epsilon = 3;
+  float weight_decay = 4;
+}
+
+message AdamOptmizer {
+  float lr = 1;
+  float beta_1 = 2;
+  float beta_2 = 3;
+  float epsilon = 4;
+  float weight_decay = 5;
+  bool amsgrad = 6;
+}
+
+enum LossType {
+  LOSS_TYPE_UNSPECIFIED = 0;
+  LOSS_TYPE_MEAN_SQUARED_ERROR = 1;
+  LOSS_TYPE_MEAN_ABSOLUTE_ERROR = 2;
+  LOSS_TYPE_MEAN_ABSOLUTE_PERCENTAGE_ERROR = 3;
+  LOSS_TYPE_MEAN_SQUARED_LOGARITHMIC_ERROR = 4;
+  LOSS_TYPE_SQUARED_HINGE = 5;
+  LOSS_TYPE_HINGE = 6;
+  LOSS_TYPE_CATEGORICAL_HINGE = 7;
+  LOSS_TYPE_LOGCOSH = 8;
+  LOSS_TYPE_CATEGORICAL_CROSSENTROPY = 9;
+  LOSS_TYPE_SPARSE_CATEGORICAL_CROSSENTROPY = 10;
+  LOSS_TYPE_BINARY_CROSSENTROPY = 11;
+  LOSS_TYPE_KULLBACK_LEIBLER_DIVERGENCE = 12;
+  LOSS_TYPE_POISSON = 13;
+  LOSS_TYPE_COSIN_PROXIMITY = 14;
+  LOSS_TYPE_CUSTOM = 15;
+}
+
+enum MetricType {
+  METRIC_TYPE_UNSPECIFIED = 0;
+  METRIC_TYPE_MAE = 1;
+  METRIC_TYPE_BINARY_ACCURACY = 2;
+  METRIC_TYPE_CATEGORICAL_ACCURACY = 3;
+  METRIC_TYPE_SPARSE_CATEGORICAL_ACCURACY = 4;
+  METRIC_TYPE_TOP_K_CATEGORICAL_ACCURACY = 5;
+  METRIC_TYPE_SPARSE_TOP_K_CATEGORICAL_ACCURACY = 6;
+  METRIC_TYPE_MSE = 7;
+  METRIC_TYPE_CUSTOM = 8;
+}
+
+message CustomLoss { string loss_function_registry_key = 1; }
+
+message LossSpec {
+  string name = 1;
+  oneof specific_loss {
+    LossType standard_loss = 2;
+    CustomLoss custom_loss = 3;
+  }
+}
+
+message LossConfig { repeated LossSpec loss_spec = 1; }
+
+message CustomMetric { string metric_function_registry_key = 1; }
+
+message MetricSpec {
+  // When name is set, the containing `MetricConfig` will be converted to a map.
+  string name = 1;
+  oneof specific_metric {
+    MetricType standard_metric = 2;
+    CustomMetric custom_metric = 3;
+  }
+}
+
+message MetricConfig { repeated MetricSpec metric_spec = 1; }
+
+message ConfigurableLayerBasedModel { repeated LayerConfig layer = 1; }
+
+message CustomModel {
+  // Model configs, including hyper parameters.
+  google.protobuf.Any config = 1;
+
+  // Function for building the model.
+  string build_model_function_registry_key = 2;
+}
+
+message ModelConfig {
+  string name = 1;
+  string description = 2;
+
+  // Model layers.
+  repeated LayerConfig layer = 3;
+
+  oneof specific_optimizer {
+    SgdOptimizer sgd_optimizer = 4;
+    RMSpropOptimizer rmsprop_optimizer = 5;
+    AdagradOptimizer adagrad_optimizer = 6;
+    AdadeltaOptimizer adadelta_optimizer = 7;
+    AdamOptmizer adam_optimizer = 8;
+  }
+
+  // Loss configuration.
+  LossConfig loss_config = 9;
+
+  // Metric configuration.
+  MetricConfig metric_config = 10;
+}

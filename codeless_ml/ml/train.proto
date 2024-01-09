@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package codeless_ml.ml;
+
+import "codeless_ml/ml/configurable_model.proto";
+import "codeless_ml/ml/input.proto";
+
+message FitConfig {
+  int32 epochs = 1;
+
+  // Required when tf.data.Dataset is used as input.
+  int32 steps_per_epoch = 2;
+
+  // This field is required when validation_dataset  of `ModelTrainerConfig` is
+  // set.
+  int32 validation_steps = 3;
+}
+
+message EvaluateConfig { int32 steps = 1; }
+
+message ModelCheckpointConfig {
+  // weights.{epoch:02d}-{val_loss:2f}.hdf5
+  string filepath = 1;
+  string monitor = 2;
+  bool save_best_only = 3;
+  enum SaveMode {
+    SAVE_MODE_UNSPECIFIED = 0;
+    SAVE_MODE_AUTO = 1;
+    SAVE_MODE_MIN = 2;
+    SAVE_MODE_MAX = 3;
+  }
+
+  SaveMode mode = 4;
+  bool save_weights_only = 5;
+  int32 period = 6;
+}
+
+message TensorBoardConfig {
+  string log_dir = 1;
+  int32 histogram_freq = 2;
+  int32 batch_size = 3;
+  bool write_graph = 4;
+  bool write_grads = 5;
+  bool write_images = 6;
+  int32 embeddings_freq = 7;
+  repeated string embeddings_layer_names = 8;
+  map<string, string> embeddings_metadata = 9;
+  oneof update_freq {
+    bool batch = 10;
+    bool epoch = 11;
+    int32 samples = 12;
+  }
+}
+
+message LoadModelConfig {
+  string architecture_path = 1;
+  string weights_path = 2;
+
+  // This field is exclusive to architecture_path and weights_path.
+  string model_path = 4;
+
+  // The path to the folder containing the files for Tensorflow SavedModel
+  // format. The folder should include,
+  // 1. a SavedModel proto containing the underlying Tensorflow graph.
+  // 2. A Tensorflow checkpoint containing model weights.
+  // This field is *exclusive* to the other fields.
+  string saved_model_path = 5;
+}
+
+message SaveModelConfig {
+  string output_directory = 1;
+}
+
+message ModelTrainerConfig {
+  DatasetConfig train_dataset = 1;
+  DatasetConfig validation_dataset = 2;
+  DatasetConfig evaluation_dataset = 3;
+  codeless_ml.ml.ModelConfig model_config = 4;
+  FitConfig fit_config = 5;
+  EvaluateConfig evaluate_config = 6;
+  LoadModelConfig load_model_config = 7;
+  SaveModelConfig save_model_config = 8;
+  ModelCheckpointConfig checkpoint_config = 9;
+
+  // A list of python packages to import before starting the training. The
+  // modules will be loaded dynamically. The user can setup the running
+  // environment in the modules, for example, configure the callables and
+  // variables in GLOBAL_VARIABLE_REPOSITORY so that these variables can be
+  // referred to by strings in ModelConfig.
+  repeated string user_defined_python_module = 10;
+
+  TensorBoardConfig tensor_board_config = 11;
+}

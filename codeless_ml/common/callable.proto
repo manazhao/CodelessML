@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package codeless_ml.common;
+
+message Int32List { repeated int32 value = 1; }
+
+message Int64List { repeated int64 value = 1; }
+
+message FloatList { repeated float value = 1; }
+
+message DoubleList { repeated double value = 1; }
+
+message StringList { repeated string value = 1; }
+
+message BytesList { repeated bytes value = 1; }
+
+message ArgumentValue {
+  oneof value {
+    int32 int32_value = 1;
+    int64 int64_value = 2;
+    float float_value = 3;
+    double double_value = 4;
+    string string_value = 5;
+    bytes bytes_value = 6;
+    Int32List int32_list = 7;
+    Int64List int64_list = 8;
+    FloatList float_list = 9;
+    DoubleList double_list = 10;
+    StringList string_list = 11;
+    BytesList bytes_list = 12;
+  }
+}
+
+message Closure {
+  string function_name = 1;
+  map<string, ArgumentValue> argument = 2;
+}
+
+message CallableRegistry {
+  oneof function {
+    string function_name = 1;
+    Closure closure = 2;
+  }
+}

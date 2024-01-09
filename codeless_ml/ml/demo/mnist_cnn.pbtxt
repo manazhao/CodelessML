@@ -1,0 +1,139 @@
+user_defined_python_module: ["codeless_ml.ml.setup_mnist"]
+train_dataset {
+  tf_record_dataset {
+    feature_spec {
+      name: "x"
+      feature_type: FEATURE_TYPE_FIXED_LENGTH
+      data_type: TF_DATA_TYPE_FLOAT32
+    }
+    feature_spec {
+      name: "y"
+      feature_type: FEATURE_TYPE_FIXED_LENGTH
+      data_type: TF_DATA_TYPE_INT32
+    }
+  }
+  batch_size: 10
+  shuffle_buffer_size: 1024
+  repeat: 10
+}
+validation_dataset {
+  tf_record_dataset {
+    feature_spec {
+      name: "x"
+      feature_type: FEATURE_TYPE_FIXED_LENGTH
+      data_type: TF_DATA_TYPE_FLOAT32
+    }
+    feature_spec {
+      name: "y"
+      feature_type: FEATURE_TYPE_FIXED_LENGTH
+      data_type: TF_DATA_TYPE_INT32
+    }
+  }
+  batch_size: 10
+  shuffle_buffer_size: 1024
+  repeat: 1
+}
+fit_config {
+  epochs: 2
+  steps_per_epoch: 500
+}
+evaluate_config {
+  steps: 500 
+}
+save_model_config {
+  output_directory: "/tmp/mnist_model" 
+}
+tensor_board_config {
+  log_dir: "/tmp/mnist_model"
+  samples: 100
+}
+model_config {
+  name: "mnist_model"
+  description: "simple cnn for minst dataset."
+  adadelta_optimizer {
+    lr: 1.0
+    rho: 0.95
+    epsilon: 1e-7
+    decay: 0.0
+  }
+  loss: LOSS_TYPE_SPARSE_CATEGORICAL_CROSSENTROPY
+  metric: [METRIC_TYPE_CATEGORICAL_ACCURACY]
+  layer {
+    name: "input"
+    input {
+      shape: [28,28,1]
+      dtype: "float32"
+      sparse: false
+    }
+  }
+  layer {
+    name: "conv1"
+    conv_2d {
+      filters: 32
+      kernel_size: [3, 3]
+      strides: [1, 1]
+      padding: PADDING_TYPE_SAME
+      data_format: DATA_FORMAT_CHANNELS_LAST
+      activation: ACTIVATION_TYPE_RELU
+    }
+    dependency: ["input"]
+  }
+  layer {
+    name: "conv2"
+    conv_2d {
+      filters: 64
+      kernel_size: [3, 3]
+      strides: [1, 1]
+      padding: PADDING_TYPE_SAME
+      data_format: DATA_FORMAT_CHANNELS_LAST
+      activation: ACTIVATION_TYPE_RELU
+    }
+    dependency: ["conv1"]
+  }
+  layer {
+    name: "pool2"
+    max_pooling_2d {
+      pool_size: [2, 2]
+      strides: [3, 3]
+      padding: PADDING_TYPE_SAME
+      data_format: DATA_FORMAT_CHANNELS_LAST
+    }
+    dependency: ["conv2"]
+  }
+  layer {
+    name: "dropout1"
+    dropout {
+      rate: 0.25
+    }
+    dependency: ["pool2"]
+  }
+  layer {
+    name: "flatten"
+    flatten {}
+    dependency: ["dropout1"]
+  }
+  layer {
+    name: "dense1"
+    dense {
+      units: 128
+      activation: ACTIVATION_TYPE_RELU
+    }
+    dependency: ["flatten"]
+  }
+  layer {
+    name: "dropout2"
+    dropout {
+      rate: 0.5
+    }
+    dependency: ["dense1"]
+  }
+  layer {
+    name: "output"
+    dense {
+      units: 10
+      activation: ACTIVATION_TYPE_SOFTMAX
+    }
+    dependency: ["dropout2"]
+    is_output: true
+  }
+}

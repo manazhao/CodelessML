@@ -1,0 +1,8 @@
+numpy
+protobuf>=3.17.3
+tensorflow
+Keras
+parameterized>=0.7.0
+
+tensorflow_datasets
+tensorflow-text
