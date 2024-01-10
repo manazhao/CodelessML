@@ -124,10 +124,18 @@ model_config {
     lr: 0.02 
     rho: 0.95
     epsilon: 1e-7
-    decay: 0.0
+    weight_decay: 0.0
   }
-  loss: LOSS_TYPE_SPARSE_CATEGORICAL_CROSSENTROPY
-  metric: [METRIC_TYPE_SPARSE_CATEGORICAL_ACCURACY]
+  loss_config {
+    loss_spec {
+      standard_loss: LOSS_TYPE_SPARSE_CATEGORICAL_CROSSENTROPY
+    }
+  }
+  metric_config {
+    metric_spec {
+      standard_metric: METRIC_TYPE_SPARSE_CATEGORICAL_ACCURACY
+    }
+  }
   layer {
     name: "image"
     input {
@@ -209,6 +217,6 @@ model_config {
 }
 EOF
 
-bazel run codeless_ml/ml:train -- \
+./bazel run codeless_ml/ml:train -- \
   --trainer_config_file=${CONFIG_FILE} \
   --job=train
