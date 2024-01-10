@@ -1,2 +1,1 @@
-codeless_ml/ml/demo/mnist/train_samples.rio filter=lfs diff=lfs merge=lfs -text
 *.rio filter=lfs diff=lfs merge=lfs -text
