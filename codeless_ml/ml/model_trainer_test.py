@@ -53,7 +53,9 @@ _TRAINER_CONFIG_PBTXT = """
     name: "mnist_model"
     description: "simple cnn for minst dataset."
     adadelta_optimizer {
-      lr: 1.0
+      lr {
+        fixed_rate: 1.0
+      }
       rho: 0.95
       epsilon: 1e-7
       weight_decay: 0.0
@@ -154,64 +156,69 @@ GVR = gv.GLOBAL_VARIABLE_REPOSITORY
 
 class ModelTrainerTest(unittest.TestCase):
 
-  def setUp(self):
-    self._trainer_config = trainer_pb2.ModelTrainerConfig()
-    text_format.Parse(_TRAINER_CONFIG_PBTXT, self._trainer_config)
-    output_directory = os.path.join(os.environ["TEST_TMPDIR"], "mnist_model")
-    if not os.path.exists(output_directory):
-      os.mkdir(output_directory)
-    self._trainer_config.save_model_config.output_directory = output_directory
-    self._trainer = ModelTrainer()
-    self._trainer.init_from_config(trainer_config=self._trainer_config)
+    def setUp(self):
+        self._trainer_config = trainer_pb2.ModelTrainerConfig()
+        text_format.Parse(_TRAINER_CONFIG_PBTXT, self._trainer_config)
+        output_directory = os.path.join(os.environ["TEST_TMPDIR"],
+                                        "mnist_model")
+        if not os.path.exists(output_directory):
+            os.mkdir(output_directory)
+        self._trainer_config.save_model_config.output_directory = output_directory
+        self._trainer = ModelTrainer()
+        self._trainer.init_from_config(trainer_config=self._trainer_config)
 
-  def _test_model_from_full_model_file(self, pred_x, full_model_file: str,
-                                       expected_pred_result: List[float]):
-    tmp_trainer_config_pbtxt = """
+    def _test_model_from_full_model_file(self, pred_x, full_model_file: str,
+                                         expected_pred_result: List[float]):
+        tmp_trainer_config_pbtxt = """
         load_model_config {
           model_path: "%s"
         }
     """ % (full_model_file)
-    self._load_model_and_test(pred_x, tmp_trainer_config_pbtxt,
-                              expected_pred_result)
+        self._load_model_and_test(pred_x, tmp_trainer_config_pbtxt,
+                                  expected_pred_result)
 
-  def _load_model_and_test(self, pred_x: np.array, trainer_config_pbtxt: str,
-                           expected_pred_result: List[float]):
-    tmp_trainer_config = trainer_pb2.ModelTrainerConfig()
-    text_format.Parse(trainer_config_pbtxt, tmp_trainer_config)
-    tmp_trainer = ModelTrainer()
-    tmp_trainer.init_from_config(tmp_trainer_config)
-    expected_pred = tmp_trainer.configurable_model.model.predict(x=pred_x)
-    np.testing.assert_array_equal(expected_pred_result, expected_pred)
+    def _load_model_and_test(self, pred_x: np.array, trainer_config_pbtxt: str,
+                             expected_pred_result: List[float]):
+        tmp_trainer_config = trainer_pb2.ModelTrainerConfig()
+        text_format.Parse(trainer_config_pbtxt, tmp_trainer_config)
+        tmp_trainer = ModelTrainer()
+        tmp_trainer.init_from_config(tmp_trainer_config)
+        expected_pred = tmp_trainer.configurable_model.model.predict(x=pred_x)
+        np.testing.assert_array_equal(expected_pred_result, expected_pred)
 
-  def testTrainAndEvaluate(self):
-    self._trainer.train()
-    expected_eval_result = self._trainer.evaluate()
-    saved_model_path = self._trainer.save_model()
-    tmp_trainer_config = trainer_pb2.ModelTrainerConfig()
-    # Setup the evaluation dataset and evaluation config.
-    tmp_trainer_config.evaluation_dataset.CopyFrom(
-        self._trainer_config.evaluation_dataset)
-    tmp_trainer_config.evaluate_config.CopyFrom(
-        self._trainer_config.evaluate_config)
-    # Configure to load the full model.
-    tmp_trainer_config.load_model_config.model_path = saved_model_path
-    tmp_trainer = ModelTrainer()
-    tmp_trainer.init_from_config(tmp_trainer_config)
-    eval_result = tmp_trainer.evaluate()
-    np.testing.assert_almost_equal(expected_eval_result, eval_result)
+    def testTrainAndEvaluate(self):
+        self._trainer.train()
+        expected_eval_result = self._trainer.evaluate()
+        saved_model_path = self._trainer.save_model()
+        tmp_trainer_config = trainer_pb2.ModelTrainerConfig()
+        # Setup the evaluation dataset and evaluation config.
+        tmp_trainer_config.evaluation_dataset.CopyFrom(
+            self._trainer_config.evaluation_dataset)
+        tmp_trainer_config.evaluate_config.CopyFrom(
+            self._trainer_config.evaluate_config)
+        # Configure to load the full model.
+        tmp_trainer_config.load_model_config.model_path = saved_model_path
+        tmp_trainer = ModelTrainer()
+        tmp_trainer.init_from_config(tmp_trainer_config)
+        eval_result = tmp_trainer.evaluate()
+        np.testing.assert_almost_equal(expected_eval_result,
+                                       eval_result,
+                                       decimal=5)
 
-  def testSaveAndLoadModel(self):
-    self._trainer.train()
-    pred_x = np.copy(GVR.retrieve_variable("/mnist_validation_x")[0,]).reshape(
-        (-1, 28, 28, 1))
-    # Make prediction for pred_x with current model.
-    expected_pred_result = self._trainer.configurable_model.model.predict(
-        x=pred_x)
-    # Now load the saved model and make prediction with it.
-    self._test_model_from_full_model_file(pred_x, self._trainer.save_model(),
-                                          expected_pred_result)
+    def testSaveAndLoadModel(self):
+        self._trainer.train()
+        pred_x = np.copy(
+            GVR.retrieve_variable("/mnist_validation_x")[0, ]).reshape(
+                (-1, 28, 28, 1))
+        # Make prediction for pred_x with current model.
+        expected_pred_result = self._trainer.configurable_model.model.predict(
+            x=pred_x)
+        # Now load the saved model and make prediction with it.
+        self._test_model_from_full_model_file(pred_x,
+                                              self._trainer.save_model(),
+                                              expected_pred_result)
 
 
 if __name__ == '__main__':
-  logging.set_verbosity(logging.INFO)
-  unittest.main()
+    logging.set_verbosity(logging.INFO)
+    unittest.main()

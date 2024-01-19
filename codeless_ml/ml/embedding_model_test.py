@@ -9,8 +9,8 @@ from codeless_ml.ml import configurable_model_pb2
 
 class EmbeddingModelTest(unittest.TestCase):
 
-  def setUp(self):
-    config_pbtxt = """
+    def setUp(self):
+        config_pbtxt = """
       name: "embedding_model_test"
       description: "test embedding layers"
       layer {
@@ -53,7 +53,9 @@ class EmbeddingModelTest(unittest.TestCase):
         is_output: true
       }
       adam_optimizer {
-        lr: 0.001
+        lr {
+            fixed_rate: 0.001
+        }
         beta_1: 0.9
         beta_2: 0.999
         weight_decay: 0.001
@@ -71,15 +73,15 @@ class EmbeddingModelTest(unittest.TestCase):
         }
       }
     """
-    model_config = configurable_model_pb2.ModelConfig()
-    text_format.Parse(config_pbtxt, model_config)
-    self._model = ConfigurableModel()
-    self._model.init_from_config(model_config)
-    self._model.model.summary()
+        model_config = configurable_model_pb2.ModelConfig()
+        text_format.Parse(config_pbtxt, model_config)
+        self._model = ConfigurableModel()
+        self._model.init_from_config(model_config)
+        self._model.model.summary()
 
-  def testDefaultStandardize(self):
-    self._model.model.predict(tf.constant([["good movie"], ["bad"]]))
+    def testDefaultStandardize(self):
+        self._model.model.predict(tf.constant([["good movie"], ["bad"]]))
 
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

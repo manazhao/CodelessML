@@ -53,7 +53,7 @@ message DatasetConfig {
 
   // Each map_fn_name should refer to a callable registered in
   // GLOBAL_VARIABLE_REPOSITORY.
-  repeated string map_fn_name = 5;
+  repeated string map_fn_name = 5 [ deprecated = true ];
 
   // Callables registered in GlobalVariableRepository.
   repeated codeless_ml.common.CallableRegistry map_callable = 6;

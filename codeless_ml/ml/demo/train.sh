@@ -121,7 +121,9 @@ model_config {
   name: "mnist_model"
   description: "simple cnn for minst dataset."
   adadelta_optimizer {
-    lr: 0.02 
+    lr {
+      fixed_rate: 0.02 
+    }
     rho: 0.95
     epsilon: 1e-7
     weight_decay: 0.0

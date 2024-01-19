@@ -14,11 +14,8 @@ def main(argv):
   dataset = tf.data.TFRecordDataset(FLAGS.tf_record_file)
   count = 0
   for record in dataset:
-    print(record)
-    # example = tf.train.Example()
-    # example.ParseFromString(record)
     print("example: %d" % (count))
-    # print(example)
+    print(record)
     count += 1
     if count >= FLAGS.num_samples:
       break

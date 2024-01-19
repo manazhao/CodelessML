@@ -10,12 +10,15 @@ package(
 proto_library(
     name = "configurable_model_proto",
     srcs = ["configurable_model.proto"],
-    deps = ["//codeless_ml/common:callable_proto", "@com_google_protobuf//:any_proto"],
+    deps = [
+        "//codeless_ml/common:callable_proto",
+        "@com_google_protobuf//:any_proto",
+    ],
 )
 
 py_proto_library(
     name = "configurable_model_py_pb2",
-    deps = [":configurable_model_proto"]
+    deps = [":configurable_model_proto"],
 )
 
 proto_library(
@@ -26,7 +29,10 @@ proto_library(
 
 py_proto_library(
     name = "input_py_pb2",
-    deps = ["//codeless_ml/common:callable_proto", ":input_proto"],
+    deps = [
+        ":input_proto",
+        "//codeless_ml/common:callable_proto",
+    ],
 )
 
 proto_library(
@@ -43,7 +49,7 @@ py_proto_library(
     deps = [
         ":configurable_model_proto",
         ":input_proto",
-        ":train_proto"
+        ":train_proto",
     ],
 )
 
@@ -51,11 +57,14 @@ py_library(
     name = "configurable_model",
     srcs = ["configurable_model.py"],
     deps = [
-        "@abseil-py//absl/logging",
-        requirement("tensorflow"),
         ":configurable_model_py_pb2",
-        "@com_google_protobuf//:protobuf_python",
         "//codeless_ml/common:global_variable",
+        "//codeless_ml/ml/transformer:decoder",
+        "//codeless_ml/ml/transformer:encoder",
+        "//codeless_ml/ml/transformer:positional_embedding",
+        "@abseil-py//absl/logging",
+        "@com_google_protobuf//:protobuf_python",
+        requirement("tensorflow"),
     ],
 )
 
@@ -78,8 +87,8 @@ py_library(
         ":input_py_pb2",
         ":train_py_pb2",
         ":trainer_modules",
-        "@com_google_protobuf//:protobuf_python",
         "//codeless_ml/common:global_variable",
+        "@com_google_protobuf//:protobuf_python",
         requirement("tensorflow"),
         "@abseil-py//absl/logging",
     ],
@@ -123,8 +132,8 @@ py_test(
     ],
     deps = [
         ":configurable_model",
-        "@com_google_protobuf//:protobuf_python",
         "@abseil-py//absl/logging",
+        "@com_google_protobuf//:protobuf_python",
         requirement("tensorflow"),
     ],
 )
@@ -136,8 +145,8 @@ py_test(
     ],
     deps = [
         ":configurable_model",
-        "@com_google_protobuf//:protobuf_python",
         "@abseil-py//absl/logging",
+        "@com_google_protobuf//:protobuf_python",
         requirement("tensorflow"),
     ],
 )
@@ -181,6 +190,23 @@ py_test(
     ],
 )
 
+py_test(
+    name = "transformer_model_test",
+    srcs = ["transformer_model_test.py"],
+    deps = [
+        ":model_trainer",
+        ":train_py_pb2",
+        "//codeless_ml/common:global_variable",
+        "//codeless_ml/ml:input",
+        "//codeless_ml/ml/transformer:loss_and_metric",
+        "//codeless_ml/ml/transformer:positional_embedding",
+        "//codeless_ml/ml/transformer:schedule",
+        "@com_google_protobuf//:protobuf_python",
+        requirement("tensorflow"),
+        requirement("numpy"),
+    ],
+)
+
 py_binary(
     name = "print_tf_record_main",
     srcs = ["print_tf_record_main.py"],
@@ -219,4 +245,3 @@ py_binary(
         "@com_google_protobuf//:protobuf_python",
     ],
 )
-

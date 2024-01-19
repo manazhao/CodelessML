@@ -104,6 +104,30 @@ message ZeroPadding2DLayer {
 
 message L2NormalizationLayer { float gamma_init = 1; }
 
+message TransformerPositionalEmbedding {
+  int32 vocab_size = 1;
+  int32 d_model = 2;
+  int32 max_length = 3;
+}
+
+message TransformerEncoder {
+  int32 num_layers = 1;
+  int32 d_model = 2;
+  int32 num_heads = 3;
+  int32 dff = 4;
+  int32 vocab_size = 5;
+  float dropout_rate = 6;
+}
+
+message TransformerDecoder {
+  int32 num_layers = 1;
+  int32 d_model = 2;
+  int32 num_heads = 3;
+  int32 dff = 4;
+  int32 vocab_size = 5;
+  float dropout_rate = 6;
+}
+
 message LayerConfig {
   string name = 1;
   repeated string dependency = 2;
@@ -121,38 +145,41 @@ message LayerConfig {
     EmbeddingLayer embedding = 13;
     GlobalAveragePooling1DLayer global_average_pooling_1d = 14;
     TextVectorizationLayer text_vectorization = 15;
+    TransformerEncoder transformer_encoder = 16;
+    TransformerDecoder transformer_decoder = 17;
+    TransformerPositionalEmbedding transformer_positional_embedding = 18;
   }
 }
 
 message SgdOptimizer {
-  float lr = 1;
+  LearningRate lr = 1;
   float weight_decay = 2;
   float momentum = 3;
   bool nesterov = 4;
 }
 
 message RMSpropOptimizer {
-  float lr = 1;
+  LearningRate lr = 1;
   float rho = 2;
   float epsilon = 3;
   float weight_decay = 4;
 }
 
 message AdagradOptimizer {
-  float lr = 1;
+  LearningRate lr = 1;
   float epsilon = 2;
   float weight_decay = 3;
 }
 
 message AdadeltaOptimizer {
-  float lr = 1;
+  LearningRate lr = 1;
   float rho = 2;
   float epsilon = 3;
   float weight_decay = 4;
 }
 
 message AdamOptmizer {
-  float lr = 1;
+  LearningRate lr = 1;
   float beta_1 = 2;
   float beta_2 = 3;
   float epsilon = 4;
@@ -191,26 +218,29 @@ enum MetricType {
   METRIC_TYPE_CUSTOM = 8;
 }
 
-message CustomLoss { string loss_function_registry_key = 1; }
-
 message LossSpec {
   string name = 1;
   oneof specific_loss {
     LossType standard_loss = 2;
-    CustomLoss custom_loss = 3;
+    codeless_ml.common.CallableRegistry custom_loss = 3;
   }
 }
 
 message LossConfig { repeated LossSpec loss_spec = 1; }
-
-message CustomMetric { string metric_function_registry_key = 1; }
 
 message MetricSpec {
   // When name is set, the containing `MetricConfig` will be converted to a map.
   string name = 1;
   oneof specific_metric {
     MetricType standard_metric = 2;
-    CustomMetric custom_metric = 3;
+    codeless_ml.common.CallableRegistry custom_metric = 3;
+  }
+}
+
+message LearningRate {
+  oneof schedule {
+    float fixed_rate = 1;
+    codeless_ml.common.CallableRegistry custom_schedule = 2;
   }
 }
 
