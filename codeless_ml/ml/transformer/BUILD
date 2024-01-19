@@ -137,6 +137,7 @@ py_test(
     srcs = ["loss_and_metric_test.py"],
     deps = [
         ":loss_and_metric",
+        "//codeless_ml/common:callable_py_pb2",
         "//codeless_ml/common:global_variable",
         requirement("tensorflow"),
         requirement("numpy"),

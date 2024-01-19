@@ -60,8 +60,8 @@ class TestTransformer(unittest.TestCase):
                                   target_vocab_size=target_vocab_size,
                                   dropout_rate=dropout_rate)
 
-        input_seq = [[1, 2, 3, 4]]
-        target_seq = [[2, 3, 4, 0]]
+        input_seq = tf.constant([[1, 2, 3, 4]])
+        target_seq = tf.constant([[2, 3, 4, 0]])
         inputs = (input_seq, target_seq)
         logits = transformer(inputs)
         np.testing.assert_array_equal(logits._keras_mask,
