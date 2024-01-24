@@ -32,7 +32,7 @@ class ConfigurableModelTest(unittest.TestCase):
           use_bias: true
           activation: ACTIVATION_TYPE_RELU
         }
-        dependency: ["image_input"]
+        dependency: {name: "image_input"}
       }
       layer {
         name: "pool1"
@@ -42,11 +42,11 @@ class ConfigurableModelTest(unittest.TestCase):
           padding: PADDING_TYPE_SAME
           data_format: DATA_FORMAT_CHANNELS_LAST
         }
-        dependency: ["conv1"]
+        dependency: {name: "conv1"}
       }
       layer {
         name: "dense1"
-        dependency: ["pool1"]
+        dependency: {name: "pool1"}
         dense {
           units: 10
           activation: ACTIVATION_TYPE_SOFTMAX

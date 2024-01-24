@@ -194,7 +194,7 @@ model_config {{
       vocab_size: {_pt_vocab_size}
       dropout_rate: 0.1
     }}
-    dependency: ["pt"]
+    dependency {{ name: "pt" }}
   }}
   layer {{
     name: "decoder"
@@ -206,7 +206,8 @@ model_config {{
       vocab_size: {_en_vocab_size}
       dropout_rate: 0.1
     }}
-    dependency: ["en", "encoder"]
+    dependency {{ name: "en" }}
+    dependency {{ name: "encoder" }}
   }}
   layer {{
     name: "target"
@@ -215,7 +216,7 @@ model_config {{
       activation: ACTIVATION_TYPE_LINEAR
     }}
     is_output: true
-    dependency: ["decoder"]
+    dependency {{ name: "decoder" }}
   }}
 }}
 """

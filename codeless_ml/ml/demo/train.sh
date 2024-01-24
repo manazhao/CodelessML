@@ -81,7 +81,7 @@ EOF
 CONFIG_FILE=$(mktemp -u)
 echo "write config to ${CONFIG_FILE}"
 cat >${CONFIG_FILE} <<EOF
-user_defined_python_module: ["codeless_ml.ml.register_callable"]
+user_defined_python_module: ["codeless_ml.ml.registry.mnist"]
 train_dataset {
   tf_record_dataset {
     filename: "$(pwd)/codeless_ml/ml/demo/mnist/train_samples.rio"
@@ -116,6 +116,9 @@ checkpoint_config {
 tensor_board_config {
   log_dir: "/tmp/mnist_model/"
   samples: 20
+}
+save_model_config {
+ output_directory: "/tmp/mnist_final_model" 
 }
 model_config {
   name: "mnist_model"
@@ -190,7 +193,7 @@ model_config {
   layer {
     name: "flatten"
     flatten {}
-    dependency: ["image"]
+    dependency: {name: "image"}
   }
   layer {
     name: "dense1"
@@ -198,7 +201,7 @@ model_config {
       units: 1024
       activation: ACTIVATION_TYPE_RELU
     }
-    dependency: ["flatten"]
+    dependency: {name: "flatten"}
   }
   # layer {
   #   name: "dropout2"
@@ -213,7 +216,7 @@ model_config {
       units: 10
       activation: ACTIVATION_TYPE_SOFTMAX
     }
-    dependency: ["dense1"]
+    dependency: {name: "dense1"}
     is_output: true
   }
 }

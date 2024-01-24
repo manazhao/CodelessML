@@ -17,20 +17,21 @@ flags.mark_flag_as_required("job")
 
 
 def main(argv):
-  with open(FLAGS.trainer_config_file, "r") as f:
-    trainer_config = ModelTrainerConfig()
-    config_pbtxt = f.read()
-    text_format.Parse(config_pbtxt, trainer_config)
+    with open(FLAGS.trainer_config_file, "r") as f:
+        trainer_config = ModelTrainerConfig()
+        config_pbtxt = f.read()
+        text_format.Parse(config_pbtxt, trainer_config)
 
-  trainer = ModelTrainer()
-  trainer.init_from_config(trainer_config)
-  if FLAGS.job == "train":
-    trainer.train()
-  elif FLAGS.job == "evaluate":
-    trainer.evalaute()
-  else:
-    logging.fatal("unsupported job: %s" % (FLAGS.job))
+    trainer = ModelTrainer()
+    trainer.init_from_config(trainer_config)
+    if FLAGS.job == "train":
+        trainer.train()
+        trainer.save_model()
+    elif FLAGS.job == "evaluate":
+        trainer.evalaute()
+    else:
+        logging.fatal("unsupported job: %s" % (FLAGS.job))
 
 
 if __name__ == "__main__":
-  app.run(main)
+    app.run(main)

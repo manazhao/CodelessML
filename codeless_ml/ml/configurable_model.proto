@@ -128,9 +128,32 @@ message TransformerDecoder {
   float dropout_rate = 6;
 }
 
+message TfHub {
+  string url = 1;
+  bool trainable = 2;
+}
+
 message LayerConfig {
+
+  message Dependency {
+    message OutputToKeep {
+      oneof select {
+        // Used for output as list of tensors.
+        int32 idx = 1;
+        // Used for output as dict of tensors.
+        string key = 2;
+      }
+    }
+    // name of the dependent layer.
+    string name = 1;
+    // If the dependent layer returns multiple tensors, specify which of the
+    // tensors will be used by the depending layer. If this field is null, all
+    // tensors will be used.
+    repeated OutputToKeep output_to_keep = 2;
+  }
+
   string name = 1;
-  repeated string dependency = 2;
+  repeated Dependency dependency = 2;
   bool is_output = 3;
   oneof specific_layer {
     InputLayer input = 4;
@@ -148,6 +171,7 @@ message LayerConfig {
     TransformerEncoder transformer_encoder = 16;
     TransformerDecoder transformer_decoder = 17;
     TransformerPositionalEmbedding transformer_positional_embedding = 18;
+    TfHub tf_hub = 19;
   }
 }
 

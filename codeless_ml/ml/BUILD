@@ -65,6 +65,7 @@ py_library(
         "@abseil-py//absl/logging",
         "@com_google_protobuf//:protobuf_python",
         requirement("tensorflow"),
+        requirement("tensorflow-hub"),
     ],
 )
 
@@ -73,8 +74,10 @@ py_library(
     srcs = ["input.py"],
     deps = [
         requirement("tensorflow"),
+        requirement("tensorflow_datasets"),
         ":input_py_pb2",
         "//codeless_ml/common:global_variable",
+        "@abseil-py//absl/logging",
     ],
 )
 
@@ -86,21 +89,14 @@ py_library(
         ":input",
         ":input_py_pb2",
         ":train_py_pb2",
-        ":trainer_modules",
         "//codeless_ml/common:global_variable",
+        "//codeless_ml/ml/registry:modules",
+        "//codeless_ml/ml/transformer:loss_and_metric",
+        "//codeless_ml/ml/transformer:schedule",
+        "@abseil-py//absl/logging",
         "@com_google_protobuf//:protobuf_python",
         requirement("tensorflow"),
-        "@abseil-py//absl/logging",
-    ],
-)
-
-py_library(
-    name = "register_callable",
-    srcs = ["register_callable.py"],
-    deps = [
-        "@abseil-py//absl/logging",
-        requirement("tensorflow"),
-        "//codeless_ml/common:global_variable",
+        requirement("tensorflow-text"),
     ],
 )
 
@@ -113,15 +109,6 @@ py_library(
         "@abseil-py//absl/logging",
         requirement("tensorflow"),
         requirement("numpy"),
-    ],
-)
-
-# A list of modules which will be loaded by the trainer before the training. In
-# the module, the user can setup the necessary context for the training.
-py_library(
-    name = "trainer_modules",
-    srcs = [
-        ":register_callable",
     ],
 )
 
@@ -160,6 +147,7 @@ py_test(
         requirement("tensorflow"),
         requirement("numpy"),
         "//codeless_ml/common:global_variable",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 
@@ -181,16 +169,6 @@ py_test(
 )
 
 py_test(
-    name = "register_callable_test",
-    srcs = ["register_callable_test.py"],
-    deps = [
-        ":register_callable",
-        requirement("numpy"),
-        requirement("tensorflow"),
-    ],
-)
-
-py_test(
     name = "transformer_model_test",
     srcs = ["transformer_model_test.py"],
     deps = [
@@ -204,6 +182,18 @@ py_test(
         "@com_google_protobuf//:protobuf_python",
         requirement("tensorflow"),
         requirement("numpy"),
+    ],
+)
+
+py_binary(
+    name = "download_tfds",
+    srcs = ["download_tfds.py"],
+    deps = [
+        requirement("tensorflow_datasets"),
+        requirement("tensorflow"),
+        "@abseil-py//absl:app",
+        "@abseil-py//absl/flags",
+        "@abseil-py//absl/logging",
     ],
 )
 
@@ -239,6 +229,11 @@ py_binary(
 py_binary(
     name = "train",
     srcs = ["train.py"],
+    data = [
+        "//codeless_ml/ml/artifacts:ted_hrlr_translate",
+        "//codeless_ml/ml/artifacts:ted_hrlr_translate_pt_en_converter",
+        "//codeless_ml/ml/examples:machine_translation",
+    ],
     deps = [
         ":model_trainer",
         ":train_py_pb2",

@@ -39,10 +39,20 @@ message TFRecordDataset {
   repeated FeatureSpec feature_spec = 2;
 }
 
+// Refer to https://www.tensorflow.org/datasets/api_docs/python/tfds/load
+// regarding the meaning of each field.
+message Tfds {
+  string name = 1;
+  string split = 2;
+  string data_dir = 3;
+  bool shuffle_files = 4;
+}
+
 message DatasetConfig {
   oneof specific_dataset {
     TensorSliceDataset tensor_slice_dataset = 1;
     TFRecordDataset tf_record_dataset = 2;
+    Tfds tfds = 8;
   }
 
   int32 batch_size = 3;

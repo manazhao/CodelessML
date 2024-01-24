@@ -88,7 +88,7 @@ _TRAINER_CONFIG_PBTXT = """
         data_format: DATA_FORMAT_CHANNELS_LAST
         activation: ACTIVATION_TYPE_RELU
       }
-      dependency: ["input"]
+      dependency: {name: "input"}
     }
     layer {
       name: "conv2"
@@ -100,7 +100,7 @@ _TRAINER_CONFIG_PBTXT = """
         data_format: DATA_FORMAT_CHANNELS_LAST
         activation: ACTIVATION_TYPE_RELU
       }
-      dependency: ["conv1"]
+      dependency: {name: "conv1"}
     }
     layer {
       name: "pool2"
@@ -110,19 +110,19 @@ _TRAINER_CONFIG_PBTXT = """
         padding: PADDING_TYPE_SAME
         data_format: DATA_FORMAT_CHANNELS_LAST
       }
-      dependency: ["conv2"]
+      dependency: {name: "conv2"}
     }
     layer {
       name: "dropout1"
       dropout {
         rate: 0.25
       }
-      dependency: ["pool2"]
+      dependency: {name: "pool2"}
     }
     layer {
       name: "flatten"
       flatten {}
-      dependency: ["dropout1"]
+      dependency: {name: "dropout1"}
     }
     layer {
       name: "dense1"
@@ -130,14 +130,14 @@ _TRAINER_CONFIG_PBTXT = """
         units: 128
         activation: ACTIVATION_TYPE_RELU
       }
-      dependency: ["flatten"]
+      dependency: {name: "flatten"}
     }
     layer {
       name: "dropout2"
       dropout {
         rate: 0.5
       }
-      dependency: ["dense1"]
+      dependency: {name: "dense1"}
     }
     layer {
       name: "output"
@@ -145,7 +145,7 @@ _TRAINER_CONFIG_PBTXT = """
         units: 10
         activation: ACTIVATION_TYPE_SOFTMAX
       }
-      dependency: ["dropout2"]
+      dependency: {name: "dropout2"}
       is_output: true
     }
   }

@@ -7,6 +7,7 @@ from typing import Callable, Any, TypeVar, List, Mapping
 from google.protobuf import text_format
 
 import tensorflow as tf
+import tensorflow_text
 
 from codeless_ml.ml.train_pb2 import ModelTrainerConfig
 from codeless_ml.ml.input_pb2 import DatasetConfig
@@ -98,13 +99,12 @@ class ModelTrainer(object):
             filepath=checkpoint_config.filepath,
             monitor=(checkpoint_config.monitor
                      if checkpoint_config.monitor else "val_loss"),
-            save_best_only=checkpoint_config.save_best_only,
-            save_weights_only=checkpoint_config.save_weights_only,
+            save_best_only=True,
+            save_weights_only=False,
             mode=("auto" if checkpoint_config.mode
                   == ModelCheckpointConfig.SAVE_MODE_UNSPECIFIED else
                   checkpoint_config.mode),
-            period=(checkpoint_config.period
-                    if checkpoint_config.period else 1))
+            save_freq="epoch")
 
     def train(self) -> tf.keras.callbacks.History:
         logging.info("Create training dataset.")

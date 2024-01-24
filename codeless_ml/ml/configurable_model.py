@@ -2,6 +2,7 @@ from absl import logging
 from google.protobuf import text_format
 
 import tensorflow as tf
+import tensorflow_hub as hub
 
 import codeless_ml.ml.configurable_model_pb2 as configurable_model_pb2
 import codeless_ml.common.global_variable as gv
@@ -133,6 +134,7 @@ class ConfigurableModel(object):
         self._model_config = configurable_model_pb2.ModelConfig()
         self._inputs = []
         self._outputs = []
+        # key is layer name and value is a list of tensors.
         self._tensor_lookup = {}
         self._name_to_layer_config = {}
         self._model = None
@@ -222,14 +224,45 @@ class ConfigurableModel(object):
         assert all(metrics), "Invalid metric value."
         self._model.compile(optimizer=optimizer, loss=losses, metrics=metrics)
 
+    def _layer_output_to_tensors(
+            self, layer_output,
+            dependency: configurable_model_pb2.LayerConfig.Dependency):
+        is_output_list = isinstance(layer_output, list) or isinstance(
+            layer_output, tuple)
+        is_output_dict = isinstance(layer_output, dict)
+        if not dependency.output_to_keep:
+            if is_output_list:
+                return layer_output
+            elif is_output_dict:
+                return list(layer_output.values())
+            else:
+                return [layer_output]
+
+        # only keep the tensors specified in the `output_to_keep` field.
+        tensors = []
+        for ele in dependency.output_to_keep:
+            select = ele.WhichOneOf("select")
+            if select == "idx":
+                assert is_output_list and (ele.idx >= 0
+                                           and ele.idx < len(layer_output))
+                tensors.append(layer_output[ele.idx])
+            elif select == "key":
+                assert is_output_dict and ele.key in layer_output
+                tensors.append(layer_output[ele.key])
+            else:
+                assert False, "either idx or key must be specified"
+        return tensors
+
     def _evaluate_layer(self, layer_config):
         if layer_config.name in self._tensor_lookup:
             return self._tensor_lookup[layer_config.name]
 
-        dependent_tensors = [
-            self._evaluate_layer(self._name_to_layer_config[d])
-            for d in layer_config.dependency
-        ]
+        dependent_tensors = []
+        for d in layer_config.dependency:
+            d_config = self._name_to_layer_config[d.name]
+            output = self._evaluate_layer(d_config)
+            dependent_tensors += self._layer_output_to_tensors(output, d)
+
         layer = None
         if layer_config.HasField("input"):
             layer = self._create_input_layer(layer_config.name,
@@ -278,15 +311,16 @@ class ConfigurableModel(object):
         elif layer_config.HasField("transformer_decoder"):
             layer = self._create_transformer_decoder(
                 layer_config.name, layer_config.transformer_decoder)
-        if layer is not None:
-            tensor = layer(*dependent_tensors) if dependent_tensors else layer
-            self._tensor_lookup[layer_config.name] = tensor
-            if layer_config.is_output:
-                self._outputs.append(tensor)
-            return layer
-        else:
-            raise ValueError(
-                "invalid LayerConfig with missing layer specification.")
+        elif layer_config.HasField("tf_hub"):
+            layer = self._create_tf_hub(layer_config.name, layer_config.tf_hub)
+
+        assert layer is not None, "invalid LayerConfig with missing layer specification."
+        layer_result = layer(
+            *dependent_tensors) if dependent_tensors else layer
+        self._tensor_lookup[layer_config.name] = layer_result
+        if layer_config.is_output:
+            self._outputs.append(layer_result)
+        return layer_result
 
     def _create_dense_layer(self, name, layer):
         return tf.keras.layers.Dense(name=name,
@@ -320,9 +354,12 @@ class ConfigurableModel(object):
         return tf.keras.layers.Flatten(name=name)
 
     def _create_input_layer(self, name, layer):
+        dims = []
+        for s in layer.shape:
+            dims.append(s if s != -1 else None)
         return tf.keras.layers.Input(
             name=name,
-            shape=tuple(layer.shape),
+            shape=tuple(dims),
             batch_size=layer.batch_size if layer.batch_size else None,
             dtype=_non_empty_string_or_none(layer.dtype),
             sparse=layer.sparse)
@@ -409,3 +446,8 @@ class ConfigurableModel(object):
                        vocab_size=layer.vocab_size,
                        dropout_rate=layer.dropout_rate,
                        name=name)
+
+    def _create_tf_hub(self, name: str,
+                       layer: configurable_model_pb2.TfHub) -> hub.KerasLayer:
+        del name
+        return hub.KerasLayer(layer.url, trainable=layer.trainable)

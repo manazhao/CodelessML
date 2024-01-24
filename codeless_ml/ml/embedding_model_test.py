@@ -27,7 +27,7 @@ class EmbeddingModelTest(unittest.TestCase):
           max_tokens: 10
           vocab: ["good", "bad", "movie", "superb", "recommend"]
         }
-        dependency: ["text_input"]
+        dependency: {name: "text_input"}
       }
       layer {
         name: "embedding"
@@ -35,12 +35,12 @@ class EmbeddingModelTest(unittest.TestCase):
           input_dim: 100
           output_dim: 16
         }
-        dependency: ["text_vectorization"]
+        dependency: {name: "text_vectorization"}
       }
       layer {
         name: "average_embedding"
         global_average_pooling_1d {}
-        dependency: ["embedding"]
+        dependency: {name: "embedding"}
       }
       layer {
         name: "dense"
@@ -49,7 +49,7 @@ class EmbeddingModelTest(unittest.TestCase):
           activation: ACTIVATION_TYPE_SOFTMAX
           use_bias: false
         }
-        dependency: ["average_embedding"]
+        dependency: {name: "average_embedding"}
         is_output: true
       }
       adam_optimizer {

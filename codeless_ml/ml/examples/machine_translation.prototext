@@ -1,0 +1,145 @@
+user_defined_python_module: [
+  "codeless_ml.ml.transformer.schedule",
+  "codeless_ml.ml.transformer.loss_and_metric",
+  "codeless_ml.ml.registry.mtnt"
+]
+train_dataset {
+  tfds {
+      name: "ted_hrlr_translate/pt_to_en"
+      split: "train"
+      data_dir: "codeless_ml/ml/artifacts"
+  }
+  batch_size: 64
+  shuffle_buffer_size: 1024
+  map_callable {
+      function_name: "/callable/pt_en_translate/prepare_batch"
+  }
+}
+validation_dataset {
+  tfds {
+      name: "ted_hrlr_translate/pt_to_en"
+      split: "validation"
+      data_dir: "codeless_ml/ml/artifacts"
+  }
+  batch_size: 64
+  shuffle_buffer_size: 1024
+  map_callable {
+      function_name: "/callable/pt_en_translate/prepare_batch"
+  }
+}
+evaluation_dataset {
+  tfds {
+      name: "ted_hrlr_translate/pt_to_en"
+      split: "test"
+      data_dir: "codeless_ml/ml/artifacts"
+  }
+  batch_size: 64
+  shuffle_buffer_size: 1024
+  map_callable {
+      function_name: "/callable/pt_en_translate/prepare_batch"
+  }
+}
+
+fit_config {
+  epochs: 10
+  steps_per_epoch: 1000
+  validation_steps: 1000
+}
+evaluate_config {
+  steps: 1000
+}
+save_model_config {
+  output_directory: "/tmp/translate_train"  
+}
+model_config {
+  name: "nmt_model"
+  description: "transformer model for translation"
+  adam_optimizer {
+    lr {
+      custom_schedule {
+        closure {
+          function_name: "/optimizer/transformer/custom_schedule"
+          argument {
+            key: "d_model"
+            value {
+              int32_value: 512
+            }
+          }
+          argument {
+            key: "warmup_steps"
+            value {
+              int32_value: 4000
+            }
+          }
+        }
+      }
+    }
+    beta_1: 0.9
+    beta_2: 0.98
+    epsilon: 1e-9
+  }
+  loss_config {
+    loss_spec {
+      custom_loss {
+        function_name: "/loss_function/transformer/sparse_cross_entropy"
+      }
+    }
+   }
+  metric_config {
+    metric_spec {
+      custom_metric {
+        function_name: "/metric/transformer/accuracy"
+      }
+    }
+  }
+  layer {
+    name: "pt"
+    input {
+      shape: [-1]
+      dtype: "int32"
+      sparse: false
+    }
+  }
+  layer {
+    name: "en"
+    input {
+      shape: [-1]
+      dtype: "int32"
+      sparse: false
+    }
+  }
+  layer {
+    name: "encoder"
+    transformer_encoder {
+      num_layers: 4
+      d_model: 512
+      num_heads: 4
+      dff: 2048
+      vocab_size: 7765
+      dropout_rate: 0.1
+    }
+    dependency { name: "pt" }
+  }
+  layer {
+    name: "decoder"
+    transformer_decoder {
+      num_layers: 4
+      d_model: 512 
+      num_heads: 4
+      dff: 2048
+      vocab_size: 7010
+      dropout_rate: 0.1
+    }
+    dependency { name: "en" }
+    dependency { name: "encoder" }
+  }
+  layer {
+    name: "target"
+    dense {
+      units: 7010
+      activation: ACTIVATION_TYPE_LINEAR
+    }
+    is_output: true
+    dependency { name: "decoder" }
+  }
+}
