@@ -227,6 +227,12 @@ py_binary(
 )
 
 py_binary(
+    name = "sysinfo",
+    srcs = ["sysinfo.py"],
+    deps = [requirement("tensorflow")],
+)
+
+py_binary(
     name = "train",
     srcs = ["train.py"],
     data = [

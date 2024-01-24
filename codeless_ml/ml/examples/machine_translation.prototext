@@ -9,7 +9,7 @@ train_dataset {
       split: "train"
       data_dir: "codeless_ml/ml/artifacts"
   }
-  batch_size: 64
+  batch_size: 128
   shuffle_buffer_size: 1024
   map_callable {
       function_name: "/callable/pt_en_translate/prepare_batch"
@@ -21,7 +21,7 @@ validation_dataset {
       split: "validation"
       data_dir: "codeless_ml/ml/artifacts"
   }
-  batch_size: 64
+  batch_size: 128
   shuffle_buffer_size: 1024
   map_callable {
       function_name: "/callable/pt_en_translate/prepare_batch"
@@ -33,7 +33,7 @@ evaluation_dataset {
       split: "test"
       data_dir: "codeless_ml/ml/artifacts"
   }
-  batch_size: 64
+  batch_size: 128
   shuffle_buffer_size: 1024
   map_callable {
       function_name: "/callable/pt_en_translate/prepare_batch"
@@ -42,15 +42,31 @@ evaluation_dataset {
 
 fit_config {
   epochs: 10
-  steps_per_epoch: 1000
-  validation_steps: 1000
 }
 evaluate_config {
   steps: 1000
 }
+# for sanity check purpose
+# fit_config {
+#   epochs: 2 
+#   steps_per_epoch: 10
+#   validation_steps: 10
+# }
+# evaluate_config {
+#   steps: 1000
+# }
 save_model_config {
-  output_directory: "/tmp/translate_train"  
+  output_directory: "/tmp/transformer_translate"  
 }
+checkpoint_config {
+  filepath: "/tmp/transformer_translate/cp-{epoch:04d}.ckpt"
+}
+
+tensor_board_config {
+  log_dir: "/tmp/transformer_translate/tensorboard"
+  samples: 20
+}
+
 model_config {
   name: "nmt_model"
   description: "transformer model for translation"
