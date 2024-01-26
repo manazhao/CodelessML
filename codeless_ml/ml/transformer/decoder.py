@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+from typing import Union
+
 from keras.utils import register_keras_serializable
 
 from codeless_ml.ml.transformer.attention import CausalSelfAttention, CrossAttention
@@ -59,7 +61,7 @@ class Decoder(tf.keras.layers.Layer):
                  d_model: int,
                  num_heads: int,
                  dff: int,
-                 vocab_size: int,
+                 vocab_size: Union[int, None],
                  dropout_rate: float = 0.1,
                  **kwargs):
         super(Decoder, self).__init__(**kwargs)
@@ -71,8 +73,10 @@ class Decoder(tf.keras.layers.Layer):
         self.vocab_size = vocab_size
         self.dropout_rate = dropout_rate
 
-        self.pos_embedding = PositionalEmbedding(vocab_size=vocab_size,
-                                                 d_model=d_model)
+        self.pos_embedding = None
+        if self.vocab_size is not None:
+            self.pos_embedding = PositionalEmbedding(vocab_size=vocab_size,
+                                                     d_model=d_model)
 
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
         self.dec_layers = [
@@ -86,7 +90,11 @@ class Decoder(tf.keras.layers.Layer):
         self.last_attn_scores = None
 
     def call(self, x, context):
-        x = self.pos_embedding(x)  # (batch_size, seq_len, d_model)
+        # apply the positional embedding if input is expected to be tokens.
+        if self.pos_embedding is not None:
+            x = self.pos_embedding(x)  # (batch_size, seq_len, d_model)
+        else:
+            tf.ensure_shape(x, (None, None, self.d_model))
         x = self.dropout(x)
 
         for i in range(self.num_layers):

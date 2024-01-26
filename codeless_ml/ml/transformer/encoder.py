@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from typing import Union
 from keras.utils import register_keras_serializable
 
 from codeless_ml.ml.transformer.attention import GlobalSelfAttention, CrossAttention, CausalSelfAttention
@@ -52,7 +53,7 @@ class Encoder(tf.keras.layers.Layer):
                  d_model: int,
                  num_heads: int,
                  dff: int,
-                 vocab_size: int,
+                 vocab_size: Union[int, None],
                  dropout_rate: float = 0.1,
                  **kwargs):
         super().__init__(**kwargs)
@@ -63,8 +64,13 @@ class Encoder(tf.keras.layers.Layer):
         self.vocab_size = vocab_size
         self.dropout_rate = dropout_rate
 
-        self.pos_embedding = PositionalEmbedding(vocab_size=vocab_size,
-                                                 d_model=d_model)
+        self.pos_embedding = None
+        # only create the positional embedding layer if the `vocab_size` is
+        # specified, otherwise, the encoder expects the input to be embedding
+        # vectors.
+        if self.vocab_size is not None:
+            self.pos_embedding = PositionalEmbedding(vocab_size=vocab_size,
+                                                     d_model=d_model)
 
         self.enc_layers = [
             EncoderLayer(d_model=d_model,
@@ -75,7 +81,13 @@ class Encoder(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
 
     def call(self, x):
-        x = self.pos_embedding(x)  # shape (batch_size, seq_len, d_model)
+        if self.pos_embedding is not None:
+            # x is expected to be integer typed tokens and hence we need to
+            # apply the positional embedding to the tokens.
+            x = self.pos_embedding(x)  # shape (batch_size, seq_len, d_model)
+        else:
+            # the input is already embedding at each position.
+            tf.ensure_shape(x, (None, None, self.d_model))
         x = self.dropout(x)
         for i in range(self.num_layers):
             x = self.enc_layers[i](x)

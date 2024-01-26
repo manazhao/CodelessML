@@ -8,6 +8,7 @@ py_library(
     deps = [
         ":mnist",
         ":mtnt",
+        ":vit",
     ],
 )
 
@@ -27,6 +28,15 @@ py_library(
         "@abseil-py//absl/logging",
         requirement("tensorflow"),
         "//codeless_ml/common:global_variable",
+    ],
+)
+
+py_library(
+    name = "vit",
+    srcs = ["vit.py"],
+    deps = [
+        "//codeless_ml/common:global_variable",
+        requirement("tensorflow"),
     ],
 )
 
@@ -53,6 +63,18 @@ py_test(
     srcs = ["mnist_test.py"],
     deps = [
         ":mnist",
+        requirement("numpy"),
+        requirement("tensorflow"),
+    ],
+)
+
+py_test(
+    name = "vit_test",
+    srcs = ["vit_test.py"],
+    deps = [
+        ":vit",
+        "//codeless_ml/common:callable_py_pb2",
+        "@com_google_protobuf//:protobuf_python",
         requirement("numpy"),
         requirement("tensorflow"),
     ],

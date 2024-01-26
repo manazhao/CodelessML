@@ -6,6 +6,7 @@ import tensorflow_hub as hub
 
 import codeless_ml.ml.configurable_model_pb2 as configurable_model_pb2
 import codeless_ml.common.global_variable as gv
+import codeless_ml.common.callable_pb2 as callable_pb2
 
 from typing import Union, Callable
 from codeless_ml.ml.transformer.encoder import Encoder
@@ -173,17 +174,19 @@ class ConfigurableModel(object):
         for metric_spec in metric_config.metric_spec:
             metric = None
             if metric_spec.HasField("standard_metric"):
-                configurable_model_pb2.LossType.Name(
+                metric = configurable_model_pb2.MetricType.Name(
                     metric_spec.standard_metric)[len("METRIC_TYPE_"):].lower()
             elif metric_spec.HasField("custom_metric"):
                 metric = GVR.retrieve_callable(metric_spec.custom_metric)
             if metric is not None:
-                metric_list.append((metric_spec.name, metric))
-            named_metric = (named_metric and metric_spec.name)
-
-        return dict(metric_list) if named_metric else [
-            metric for _, metric in metric_list
-        ]
+                if metric_spec.name:
+                    named_metrics = True
+                    metric_list.append((metric_spec.name, metric))
+                else:
+                    metric_list.append(metric)
+        assert metric_list and len(
+            metric_list) > 0, f"no metrics from config {metric_config}"
+        return dict(metric_list) if named_metric else metric_list
 
     def _create_optimizer(self):
         if self._model_config.HasField("sgd_optimizer"):
@@ -264,6 +267,7 @@ class ConfigurableModel(object):
             dependent_tensors += self._layer_output_to_tensors(output, d)
 
         layer = None
+        unpack_input = True
         if layer_config.HasField("input"):
             layer = self._create_input_layer(layer_config.name,
                                              layer_config.input)
@@ -313,10 +317,21 @@ class ConfigurableModel(object):
                 layer_config.name, layer_config.transformer_decoder)
         elif layer_config.HasField("tf_hub"):
             layer = self._create_tf_hub(layer_config.name, layer_config.tf_hub)
+        elif layer_config.HasField("custom_callable"):
+            layer = self._create_custom_callable(layer_config.name,
+                                                 layer_config.custom_callable)
+        elif layer_config.HasField("add"):
+            unpack_input = False
+            layer = tf.keras.layers.Add(name=layer_config.name)
 
         assert layer is not None, "invalid LayerConfig with missing layer specification."
-        layer_result = layer(
-            *dependent_tensors) if dependent_tensors else layer
+        layer_result = None
+        if not dependent_tensors:
+            layer_result = layer
+        elif unpack_input:
+            layer_result = layer(*dependent_tensors)
+        else:
+            layer_result = layer(dependent_tensors)
         self._tensor_lookup[layer_config.name] = layer_result
         if layer_config.is_output:
             self._outputs.append(layer_result)
@@ -428,13 +443,14 @@ class ConfigurableModel(object):
     def _create_transformer_encoder(
             self, name: str,
             layer: configurable_model_pb2.TransformerEncoder) -> Encoder:
-        return Encoder(num_layers=layer.num_layers,
-                       d_model=layer.d_model,
-                       num_heads=layer.num_heads,
-                       dff=layer.dff,
-                       vocab_size=layer.vocab_size,
-                       dropout_rate=layer.dropout_rate,
-                       name=name)
+        return Encoder(
+            num_layers=layer.num_layers,
+            d_model=layer.d_model,
+            num_heads=layer.num_heads,
+            dff=layer.dff,
+            vocab_size=layer.vocab_size if layer.vocab_size else None,
+            dropout_rate=layer.dropout_rate,
+            name=name)
 
     def _create_transformer_decoder(
             self, name: str,
@@ -451,3 +467,8 @@ class ConfigurableModel(object):
                        layer: configurable_model_pb2.TfHub) -> hub.KerasLayer:
         del name
         return hub.KerasLayer(layer.url, trainable=layer.trainable)
+
+    def _create_custom_callable(self, name: str,
+                                layer: callable_pb2.CallableRegistry):
+        del name
+        return GVR.retrieve_callable(layer)

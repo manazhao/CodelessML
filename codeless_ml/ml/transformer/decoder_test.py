@@ -101,6 +101,22 @@ class TestDecoder(unittest.TestCase):
         npt.assert_allclose(reloaded_decoder(input, context=context_emb),
                             output)
 
+    def test_embedding_input(self):
+        batch = 5
+        seq_len = 4
+        d_model = 16
+        dff = 32
+        decoder = Decoder(num_layers=4,
+                          d_model=d_model,
+                          num_heads=8,
+                          dff=dff,
+                          vocab_size=None)
+        input = tf.random.normal([batch, seq_len, d_model])
+        target_seq = 8
+        context_emb = tf.random.normal([batch, seq_len, d_model])
+        output = decoder(input, context=context_emb)
+        self.assertEqual(output.shape, (batch, seq_len, d_model))
+
 
 if __name__ == '__main__':
     unittest.main()

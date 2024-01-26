@@ -98,6 +98,9 @@ def get_dataset(config: input_pb2.DatasetConfig) -> tf.data.Dataset:
     if config.shuffle_buffer_size > 0:
         dataset = dataset.shuffle(buffer_size=config.shuffle_buffer_size)
 
+    for map_callable in config.pre_batch_map_callable:
+        dataset = dataset.map(GVR.retrieve_callable(map_callable),
+                              tf.data.AUTOTUNE)
     if config.batch_size > 0:
         dataset = dataset.batch(config.batch_size)
 

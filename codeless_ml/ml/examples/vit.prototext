@@ -1,0 +1,203 @@
+user_defined_python_module: [
+  "codeless_ml.ml.transformer.schedule",
+  "codeless_ml.ml.registry.vit"
+]
+train_dataset {
+  tfds {
+      name: "imagenette/160px"
+      split: "train"
+      data_dir: "codeless_ml/ml/artifacts"
+  }
+  batch_size: 64
+  shuffle_buffer_size: 1024
+  pre_batch_map_callable {
+    closure {
+      function_name: "codeless_ml.ml.registry.create_input_fn"
+      argument { key: "new_height"
+       value { int32_value: 160 }
+      }
+      argument {
+        key: "new_width"
+        value { int32_value: 160 }
+      }
+      argument {
+        key: "num_patches"
+        value { int32_value: 4 }
+      }
+    }
+  }
+}
+validation_dataset {
+  tfds {
+      name: "imagenette/160px"
+      split: "validation"
+      data_dir: "codeless_ml/ml/artifacts"
+  }
+  batch_size: 64
+  shuffle_buffer_size: 1024
+  pre_batch_map_callable {
+    closure {
+      function_name: "codeless_ml.ml.registry.create_input_fn"
+      argument {
+       key: "new_height"
+       value { int32_value: 160 }
+      }
+      argument {
+        key: "new_width"
+        value { int32_value: 160 }
+      }
+      argument {
+        key: "num_patches"
+        value { int32_value: 4 }
+      }
+    }
+  }
+}
+
+fit_config {
+  epochs: 10
+}
+save_model_config {
+  output_directory: "/tmp/vit"  
+}
+checkpoint_config {
+  filepath: "/tmp/vit/cp-{epoch:04d}.ckpt"
+}
+
+tensor_board_config {
+  log_dir: "/tmp/vit/tensorboard"
+  samples: 20
+}
+
+model_config {
+  name: "vit"
+  description: "visual transformer"
+  adam_optimizer {
+    lr {
+      custom_schedule {
+        closure {
+          function_name: "/optimizer/transformer/custom_schedule"
+          argument {
+            key: "d_model"
+            value { int32_value: 512 }
+          }
+          argument {
+            key: "warmup_steps"
+            value { int32_value: 4000 }
+          }
+        }
+      }
+    }
+    beta_1: 0.9
+    beta_2: 0.98
+    epsilon: 1e-9
+  }
+  loss_config {
+    loss_spec { standard_loss: LOSS_TYPE_SPARSE_CATEGORICAL_CROSSENTROPY }
+  }
+  metric_config {
+    metric_spec { standard_metric:  METRIC_TYPE_SPARSE_CATEGORICAL_ACCURACY }
+  }
+  layer {
+    name: "pos_token"
+    input {
+      # 4 * 4 patches + [CLS] token
+      shape: [17]
+      dtype: "int32"
+      sparse: false
+    }
+  }
+  layer {
+    name: "cls_token"
+    input {
+      shape: [1]
+      dtype: "int32"
+      sparse: false
+    }
+  }
+  layer {
+    name: "patch"
+    input {
+      # the last dimension: 40 x 40 x 3
+      shape: [-1, 4800]
+      dtype: "float"
+      sparse: false
+    }
+  }
+  # project the patches into embeddings.
+  layer {
+    name: "patch_emb"
+    dense {
+      units: 512
+      activation: ACTIVATION_TYPE_LINEAR
+    }
+    dependency { name: "patch" }
+  }
+  layer {
+    name: "cls_emb"
+    embedding {
+      # only one token needed.
+      input_dim: 1
+      output_dim: 512
+    }
+    dependency { name: "cls_token" }
+  }
+  layer {
+    name: "concat_emb"
+    custom_callable {
+      function_name: "codeless_ml.ml.registry.concat_embeddings"
+    }
+    dependency { name: "cls_emb" }
+    dependency { name: "patch_emb" }
+  }
+  layer {
+    name: "pos_emb"
+    embedding {
+      # vocab size = 1 (cls) + 4 * 4 patches  
+      input_dim: 17
+      output_dim: 512
+    }
+    dependency { name: "pos_token" }
+  }
+  layer {
+    name: "add_emb"
+    add {}
+    dependency { name: "pos_emb" }
+    dependency { name: "concat_emb" }
+  }
+  layer {
+    name: "encoder"
+    transformer_encoder {
+      num_layers: 4
+      d_model: 512
+      num_heads: 4
+      dff: 2048
+      dropout_rate: 0.1
+    }
+    dependency { name: "add_emb" }
+  }
+  layer {
+    name: "extract_cls"
+    custom_callable {
+      function_name: "codeless_ml.ml.registry.extract_cls_embedding"
+    }
+    dependency {name: "encoder"}
+  }
+  layer {
+    name: "mlp"
+    dense {
+      units: 2048
+      activation: ACTIVATION_TYPE_RELU
+    }
+    dependency { name: "extract_cls" }
+  }
+  layer {
+    name: "target"
+    dense {
+      units: 10
+      activation: ACTIVATION_TYPE_SOFTMAX
+    }
+    is_output: true
+    dependency { name: "mlp" }
+  }
+}

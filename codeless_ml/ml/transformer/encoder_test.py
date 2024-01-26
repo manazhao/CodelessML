@@ -94,6 +94,21 @@ class TestEncoder(unittest.TestCase):
         reloaded_encoder.set_weights(weights)
         npt.assert_allclose(reloaded_encoder(input), output)
 
+    def test_embedding_input(self):
+        batch = 5
+        seq_len = 4
+        d_model = 16
+        dff = 32
+        # create an encoder without positional embedding layer.
+        encoder = Encoder(num_layers=4,
+                          d_model=d_model,
+                          num_heads=8,
+                          dff=dff,
+                          vocab_size=None)
+        x = tf.random.normal([batch, seq_len, d_model])
+        output = encoder(x)
+        self.assertEqual(output.shape, (batch, seq_len, d_model))
+
 
 if __name__ == '__main__':
     unittest.main()

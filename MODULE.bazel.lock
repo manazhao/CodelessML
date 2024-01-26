@@ -2090,7 +2090,7 @@
     },
     "@@rules_go~0.44.0//go:extensions.bzl%go_sdk": {
       "os:linux,arch:amd64": {
-        "bzlTransitiveDigest": "pV3xukn4sznDuleA4hMk/l/O3E3vfCqfyU/shuIth1I=",
+        "bzlTransitiveDigest": "kiXC3G4aNMCaNAvq0fd7s1GPHmEkVu6lBR94QAFV6DY=",
         "accumulatedFileDigests": {},
         "envVariables": {},
         "generatedRepoSpecs": {
@@ -2841,7 +2841,7 @@
     },
     "@@rules_python~0.27.1//python/extensions:pip.bzl%pip": {
       "os:linux,arch:amd64": {
-        "bzlTransitiveDigest": "3/kEe6zh5aHqoiD0b8waAS82YGcOO3NpMmwT/FlI5UY=",
+        "bzlTransitiveDigest": "gwO9gA+Xm8qVE6hhM9cvlblYP57I1J717AKb3XjU9V4=",
         "accumulatedFileDigests": {
           "@@//codeless_ml/pip:requirements.txt": "6e8974f9f2346358d2985e330e3254dde766387ffcf78fe85b7421ec91ce6f05"
         },

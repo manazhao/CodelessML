@@ -10,15 +10,15 @@ class RegisterCallableTest(unittest.TestCase):
 
     def setUp(self):
         super(RegisterCallableTest, self).setUp()
-        self._feature_value = np.array([1., 2., 3., 4.])
-        self._label_value = np.array([0, 1, 0, 1])
+        self._feature_value = np.array([[1., 2., 3., 4.]])
+        self._label_value = np.array([[0]])
         self._feature_map = {
             "x": tf.constant(self._feature_value),
             "y": tf.constant(self._label_value),
             "z": tf.constant([.1, 0.2]),
-            "width": tf.constant([2]),
-            "height": tf.constant([2]),
-            "channel": tf.constant([1])
+            "width": tf.constant([[2]]),
+            "height": tf.constant([[2]]),
+            "channel": tf.constant([[1]])
         }
 
     def testSlice(self):
@@ -29,7 +29,7 @@ class RegisterCallableTest(unittest.TestCase):
                                                channel_name="channel")
         feature, label = map_fn(self._feature_map)
         np.testing.assert_array_equal(
-            np.reshape(self._feature_value, [2, 2, 1]), feature.numpy())
+            np.reshape(self._feature_value, (1, 2, 2, 1)), feature.numpy())
         np.testing.assert_array_equal(self._label_value, label.numpy())
 
 

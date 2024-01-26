@@ -37,7 +37,6 @@ def _accuracy_function(label, pred):
     return tf.reduce_sum(accuracies) / tf.reduce_sum(mask)
 
 
-print("register loss and metric for transformer model")
 LOSS_REGESTRY_KEY = "/loss_function/transformer/sparse_cross_entropy"
 METRIC_REGISTRY_KEY = "/metric/transformer/accuracy"
 

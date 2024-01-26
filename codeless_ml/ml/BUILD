@@ -58,6 +58,7 @@ py_library(
     srcs = ["configurable_model.py"],
     deps = [
         ":configurable_model_py_pb2",
+        "//codeless_ml/common:callable_py_pb2",
         "//codeless_ml/common:global_variable",
         "//codeless_ml/ml/transformer:decoder",
         "//codeless_ml/ml/transformer:encoder",
@@ -236,9 +237,11 @@ py_binary(
     name = "train",
     srcs = ["train.py"],
     data = [
+        "//codeless_ml/ml/artifacts:imagenette",
         "//codeless_ml/ml/artifacts:ted_hrlr_translate",
         "//codeless_ml/ml/artifacts:ted_hrlr_translate_pt_en_converter",
         "//codeless_ml/ml/examples:machine_translation",
+        "//codeless_ml/ml/examples:vit",
     ],
     deps = [
         ":model_trainer",

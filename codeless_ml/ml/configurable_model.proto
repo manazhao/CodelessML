@@ -12,11 +12,6 @@ message InputLayer {
   bool sparse = 4;
 }
 
-message LambdaLayer {
-  string function_id = 1;
-  repeated int32 output_shape = 2;
-}
-
 enum PaddingType {
   PADDING_TYPE_UNSPECIFIED = 0;
   PADDING_TYPE_SAME = 1;
@@ -43,6 +38,8 @@ enum ActivationType {
   ACTIVATION_TYPE_EXPONENTIAL = 10;
   ACTIVATION_TYPE_LINEAR = 11;
 }
+
+message AddLayer {}
 
 message ActivationLayer { ActivationType type = 1; }
 
@@ -172,6 +169,8 @@ message LayerConfig {
     TransformerDecoder transformer_decoder = 17;
     TransformerPositionalEmbedding transformer_positional_embedding = 18;
     TfHub tf_hub = 19;
+    codeless_ml.common.CallableRegistry custom_callable = 20;
+    AddLayer add = 21;
   }
 }
 

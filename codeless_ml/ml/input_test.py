@@ -3,7 +3,6 @@ import unittest
 
 import numpy as np
 import tensorflow as tf
-import google.protobuf.text_format as text_format
 
 import codeless_ml.ml.input_pb2 as input_pb2
 import codeless_ml.ml.input as data_input

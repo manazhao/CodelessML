@@ -65,8 +65,11 @@ message DatasetConfig {
   // GLOBAL_VARIABLE_REPOSITORY.
   repeated string map_fn_name = 5 [ deprecated = true ];
 
-  // Callables registered in GlobalVariableRepository.
+  // Callables registered in GlobalVariableRepository and called after batch.
   repeated codeless_ml.common.CallableRegistry map_callable = 6;
+
+  // Callables called before batch.
+  repeated codeless_ml.common.CallableRegistry pre_batch_map_callable = 9;
 
   // The number of times of repeating the dataset. When -1, it means repeating
   // infinitely.
