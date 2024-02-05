@@ -8,7 +8,7 @@ train_dataset {
       split: "train"
       data_dir: "codeless_ml/ml/artifacts"
   }
-  batch_size: 64
+  batch_size: 128
   shuffle_buffer_size: 1024
   pre_batch_map_callable {
     closure {
@@ -22,7 +22,7 @@ train_dataset {
       }
       argument {
         key: "num_patches"
-        value { int32_value: 4 }
+        value { int32_value: 10 }
       }
     }
   }
@@ -33,7 +33,7 @@ validation_dataset {
       split: "validation"
       data_dir: "codeless_ml/ml/artifacts"
   }
-  batch_size: 64
+  batch_size: 128
   shuffle_buffer_size: 1024
   pre_batch_map_callable {
     closure {
@@ -48,24 +48,25 @@ validation_dataset {
       }
       argument {
         key: "num_patches"
-        value { int32_value: 4 }
+        value { int32_value: 10 }
       }
     }
   }
 }
 
 fit_config {
-  epochs: 10
+  epochs: 50
 }
 save_model_config {
-  output_directory: "/tmp/vit"  
+  output_directory: "/tmp/vit3"  
 }
 checkpoint_config {
-  filepath: "/tmp/vit/cp-{epoch:04d}.ckpt"
+  filepath: "/tmp/vit3/cp-{epoch:04d}.ckpt"
 }
 
 tensor_board_config {
-  log_dir: "/tmp/vit/tensorboard"
+  log_dir: "/tmp/vit3/tensorboard"
+  write_graph: true
   samples: 20
 }
 
@@ -74,12 +75,13 @@ model_config {
   description: "visual transformer"
   adam_optimizer {
     lr {
+      # fixed_rate: 0.01
       custom_schedule {
         closure {
           function_name: "/optimizer/transformer/custom_schedule"
           argument {
             key: "d_model"
-            value { int32_value: 512 }
+            value { int32_value: 768 }
           }
           argument {
             key: "warmup_steps"
@@ -101,8 +103,8 @@ model_config {
   layer {
     name: "pos_token"
     input {
-      # 4 * 4 patches + [CLS] token
-      shape: [17]
+      # 10 * 10 patches + [CLS] token
+      shape: [101]
       dtype: "int32"
       sparse: false
     }
@@ -118,8 +120,8 @@ model_config {
   layer {
     name: "patch"
     input {
-      # the last dimension: 40 x 40 x 3
-      shape: [-1, 4800]
+      # the last dimension: 16 x 16 x 3
+      shape: [-1, 768]
       dtype: "float"
       sparse: false
     }
@@ -128,7 +130,7 @@ model_config {
   layer {
     name: "patch_emb"
     dense {
-      units: 512
+      units: 768
       activation: ACTIVATION_TYPE_LINEAR
     }
     dependency { name: "patch" }
@@ -138,7 +140,7 @@ model_config {
     embedding {
       # only one token needed.
       input_dim: 1
-      output_dim: 512
+      output_dim: 768
     }
     dependency { name: "cls_token" }
   }
@@ -153,9 +155,9 @@ model_config {
   layer {
     name: "pos_emb"
     embedding {
-      # vocab size = 1 (cls) + 4 * 4 patches  
-      input_dim: 17
-      output_dim: 512
+      # vocab size = 1 (cls) + 10 * 10 patches  
+      input_dim: 101
+      output_dim: 768
     }
     dependency { name: "pos_token" }
   }
@@ -168,9 +170,9 @@ model_config {
   layer {
     name: "encoder"
     transformer_encoder {
-      num_layers: 4
-      d_model: 512
-      num_heads: 4
+      num_layers: 8
+      d_model: 768
+      num_heads: 8
       dff: 2048
       dropout_rate: 0.1
     }
@@ -187,7 +189,7 @@ model_config {
     name: "mlp"
     dense {
       units: 2048
-      activation: ACTIVATION_TYPE_RELU
+      activation: ACTIVATION_TYPE_TANH
     }
     dependency { name: "extract_cls" }
   }

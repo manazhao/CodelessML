@@ -38,8 +38,8 @@ def _data_format_to_string(data_format):
 
 
 def _activation_type_to_string(activation_type):
-    if activation_type == configurable_model_pb2.ACTIVATION_TYPE_TAHN:
-        return "tahn"
+    if activation_type == configurable_model_pb2.ACTIVATION_TYPE_TANH:
+        return "tanh"
     elif activation_type == configurable_model_pb2.ACTIVATION_TYPE_SOFTMAX:
         return "softmax"
     elif activation_type == configurable_model_pb2.ACTIVATION_TYPE_ELU:
