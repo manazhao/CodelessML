@@ -88,7 +88,7 @@ py_library(
 
 py_test(
     name = "attention_test",
-    size = "small",
+    size = "medium",
     srcs = ["attention_test.py"],
     deps = [
         ":attention",
@@ -100,7 +100,7 @@ py_test(
 
 py_test(
     name = "decoder_test",
-    size = "small",
+    size = "medium",
     srcs = ["decoder_test.py"],
     deps = [
         ":decoder",
@@ -112,7 +112,7 @@ py_test(
 
 py_test(
     name = "encoder_test",
-    size = "small",
+    size = "medium",
     srcs = ["encoder_test.py"],
     deps = [
         ":encoder",
@@ -123,7 +123,7 @@ py_test(
 
 py_test(
     name = "ff_test",
-    size = "small",
+    size = "medium",
     srcs = ["ff_test.py"],
     deps = [
         ":ff",
@@ -146,7 +146,7 @@ py_test(
 
 py_test(
     name = "positional_embedding_test",
-    size = "small",
+    size = "medium",
     srcs = ["positional_embedding_test.py"],
     deps = [
         ":positional_embedding",
@@ -157,7 +157,7 @@ py_test(
 
 py_test(
     name = "schedule_test",
-    size = "small",
+    size = "medium",
     srcs = ["schedule_test.py"],
     deps = [
         ":schedule",
@@ -170,7 +170,7 @@ py_test(
 
 py_test(
     name = "transformer_test",
-    size = "small",
+    size = "medium",
     srcs = ["transformer_test.py"],
     deps = [
         ":transformer",
