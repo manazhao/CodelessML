@@ -1,4 +1,5 @@
 # ignore bazel output files which should be regenerated locally.
 bazel-*/
 # vim temp files
-*.swo*
+*.swo
+*.swp

@@ -18,6 +18,16 @@ py_library(
 )
 
 py_library(
+    name = "cache_attention",
+    srcs = ["cache_attention.py"],
+    deps = [
+        ":kv_cache",
+        requirement("tensorflow"),
+        requirement("numpy"),
+    ],
+)
+
+py_library(
     name = "decoder",
     srcs = ["decoder.py"],
     deps = [
@@ -45,6 +55,14 @@ py_library(
     deps = [
         requirement("tensorflow"),
         requirement("numpy"),
+    ],
+)
+
+py_library(
+    name = "kv_cache",
+    srcs = ["kv_cache.py"],
+    deps = [
+        requirement("tensorflow"),
     ],
 )
 
@@ -99,6 +117,16 @@ py_test(
 )
 
 py_test(
+    name = "cache_attention_test",
+    size = "medium",
+    srcs = ["cache_attention_test.py"],
+    deps = [
+        ":cache_attention",
+        requirement("tensorflow"),
+    ],
+)
+
+py_test(
     name = "decoder_test",
     size = "medium",
     srcs = ["decoder_test.py"],
@@ -129,6 +157,16 @@ py_test(
         ":ff",
         requirement("tensorflow"),
         requirement("numpy"),
+    ],
+)
+
+py_test(
+    name = "kv_cache_test",
+    size = "medium",
+    srcs = ["kv_cache_test.py"],
+    deps = [
+        ":kv_cache",
+        requirement("tensorflow"),
     ],
 )
 
