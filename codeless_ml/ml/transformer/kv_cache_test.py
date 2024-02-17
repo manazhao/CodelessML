@@ -9,14 +9,9 @@ class KVCacheTest(tf.test.TestCase):
 
     def test_update_cache(self):
         batch_size, num_heads, head_size = 10, 2, 8
-        layer = KVCache(batch_size=batch_size,
-                        max_seq_len=128,
+        layer = KVCache(max_seq_len=128,
                         num_heads=num_heads,
                         head_size=head_size)
-        self.assertEqual(layer.content.shape,
-                         [batch_size, 0, num_heads, head_size])
-        self.assertEqual(layer.mask.shape, [batch_size, 0])
-
         # now add values to cache.
         seq_len = 5
         x = np.random.rand(batch_size, seq_len, num_heads, head_size)

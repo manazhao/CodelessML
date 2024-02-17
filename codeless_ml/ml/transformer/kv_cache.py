@@ -7,17 +7,24 @@ from typing import List
 @register_keras_serializable(package="codeless_ml.ml.transformer")
 class KVCache(tf.keras.layers.Layer):
 
-    def __init__(self, batch_size: int, max_seq_len: int, num_heads: int,
-                 head_size: int):
+    def __init__(self, max_seq_len: int, num_heads: int, head_size: int):
         super(KVCache, self).__init__()
         (self._batch_size, self._max_seq_len, self._num_heads,
-         self._head_size) = (batch_size, max_seq_len, num_heads, head_size)
-        self._cache = tf.Variable(tf.zeros(
-            [batch_size, max_seq_len, num_heads, head_size], dtype=tf.float32),
-                                  trainable=False)
+         self._head_size) = (None, max_seq_len, num_heads, head_size)
+        self._cache = None
+        self._mask = None
         self._index = tf.Variable(0, trainable=False)
-        self._mask = tf.Variable(tf.constant(True,
-                                             shape=[batch_size, max_seq_len]),
+
+    def _init_cache(self, batch_size: int):
+        self._batch_size = batch_size
+        self._cache = tf.Variable(tf.zeros([
+            self._batch_size, self._max_seq_len, self._num_heads,
+            self._head_size
+        ],
+                                           dtype=tf.float32),
+                                  trainable=False)
+        self._mask = tf.Variable(tf.constant(
+            True, shape=[batch_size, self._max_seq_len]),
                                  trainable=False)
 
     @property
@@ -53,6 +60,8 @@ class KVCache(tf.keras.layers.Layer):
              x: tf.Tensor,
              reset_index: tf.Tensor,
              mask: tf.Tensor | None = None):
+        if self._mask is None:
+            self._init_cache(batch_size=x.shape[0])
         tf.ensure_shape(
             x, [self._batch_size, None, self._num_heads, self._head_size])
         seq_len = x.shape[1]

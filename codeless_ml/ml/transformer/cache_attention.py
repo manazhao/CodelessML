@@ -4,8 +4,6 @@ import tensorflow as tf
 from collections import namedtuple
 from codeless_ml.ml.transformer.kv_cache import KVCache
 
-CacheConfig = namedtuple('CacheConfig', ['batch_size', 'max_seq_len'])
-
 
 # `CacheAttention` can cache the key and value matrices for MultiHeadAttention
 # for existing tokens. Cache should only be used in model inference and can
@@ -21,7 +19,7 @@ class CacheAttention(tf.keras.layers.MultiHeadAttention):
                  num_heads: int,
                  key_dim: int,
                  value_dim: int | None = None,
-                 cache_config: CacheConfig | None = None,
+                 cache_max_seq_len: int | None = None,
                  *args,
                  **kwargs):
         super().__init__(num_heads=num_heads,
@@ -34,19 +32,17 @@ class CacheAttention(tf.keras.layers.MultiHeadAttention):
         if value_dim is None:
             value_dim = key_dim
         self.value_dim = value_dim
-        self._cache_config = cache_config
+        self._cache_max_seq_len = cache_max_seq_len
         self._key_cache, self._value_cache = (None, None)
 
     def _init_cache(self):
-        if not self._cache_config:
+        if not self._cache_max_seq_len:
             return
 
-        self._key_cache = KVCache(batch_size=self._cache_config.batch_size,
-                                  max_seq_len=self._cache_config.max_seq_len,
+        self._key_cache = KVCache(max_seq_len=self._cache_max_seq_len,
                                   num_heads=self.num_heads,
                                   head_size=self.key_dim)
-        self._value_cache = KVCache(batch_size=self._cache_config.batch_size,
-                                    max_seq_len=self._cache_config.max_seq_len,
+        self._value_cache = KVCache(max_seq_len=self._cache_max_seq_len,
                                     num_heads=self.num_heads,
                                     head_size=self.key_dim)
 
@@ -113,7 +109,7 @@ class CacheAttention(tf.keras.layers.MultiHeadAttention):
         elif value_is_ragged:
             value = value.to_tensor(shape=tf.shape(key))
 
-        use_kv_cache = self._cache_config is not None
+        use_kv_cache = self._cache_max_seq_len is not None
         attention_mask = None
         if not use_kv_cache:
             attention_mask = self._compute_attention_mask(
@@ -151,9 +147,6 @@ class CacheAttention(tf.keras.layers.MultiHeadAttention):
                                                       value,
                                                       key_mask=key_mask,
                                                       value_mask=value_mask)
-            tf.print("query mask after cache", query._keras_mask)
-            tf.print("key mask after cache", key._keras_mask)
-            tf.print("value mask after cache", value._keras_mask)
             # we want to compute the mask with the full-length key and value
             # tensors.
             attention_mask = self._compute_attention_mask(

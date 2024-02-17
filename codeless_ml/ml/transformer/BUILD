@@ -12,6 +12,7 @@ py_library(
     name = "attention",
     srcs = ["attention.py"],
     deps = [
+        ":cache_attention",
         requirement("tensorflow"),
         requirement("numpy"),
     ],
