@@ -461,6 +461,8 @@ class ConfigurableModel(object):
                        dff=layer.dff,
                        vocab_size=layer.vocab_size,
                        dropout_rate=layer.dropout_rate,
+                       cache_max_seq_len=(layer.cache_max_seq_len if
+                                          layer.cache_max_seq_len else None),
                        name=name)
 
     def _create_tf_hub(self, name: str,

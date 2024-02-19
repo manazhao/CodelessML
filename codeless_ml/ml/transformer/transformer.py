@@ -34,8 +34,6 @@ class Transformer(tf.keras.Model):
 
     def call(self, inputs):
         context, x = inputs
-        print(context)
-        print(x)
         context = self.encoder(context)  # (batch_size, context_len, d_model)
         x = self.decoder(x, context)  # (batch_size, target_len, d_model)
         logits = self.final_layer(

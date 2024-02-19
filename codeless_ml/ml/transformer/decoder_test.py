@@ -117,6 +117,37 @@ class TestDecoder(unittest.TestCase):
         output = decoder(input, context=context_emb)
         self.assertEqual(output.shape, (batch, seq_len, d_model))
 
+    def test_auto_regressive_decode(self):
+        batch_size, enc_seq_len, dff, cache_max_seq_len = 2, 4, 32, 4
+        num_heads, head_size, vocab_size = 4, 8, 5
+        d_model = num_heads * head_size
+        decoder = Decoder(num_layers=4,
+                          d_model=head_size,
+                          num_heads=num_heads,
+                          dff=dff,
+                          vocab_size=vocab_size,
+                          cache_max_seq_len=cache_max_seq_len)
+        logits = tf.keras.layers.Dense(vocab_size)
+        context = tf.random.normal([batch_size, enc_seq_len, d_model])
+        decoder_input = tf.constant(1, shape=[batch_size, 1], dtype=tf.int32)
+        output_array = tf.TensorArray(dtype=tf.int64,
+                                      size=0,
+                                      dynamic_size=True)
+        for i in range(cache_max_seq_len):
+            if i > 0:
+                context = tf.random.normal([batch_size, 0, d_model])
+            predictions = logits(
+                decoder(decoder_input,
+                        context,
+                        reset_cache=tf.constant(True if i == 0 else False,
+                                                shape=[batch_size, 1])))
+            # get the maximum of axis -1
+            predicted_id = tf.argmax(predictions, axis=-1)
+            output_array = output_array.write(i, predicted_id)
+            decoder_input = predicted_id
+        outputs = tf.transpose(tf.squeeze(output_array.stack(), axis=-1))
+        self.assertEqual(outputs.shape, [batch_size, cache_max_seq_len])
+
 
 if __name__ == '__main__':
     unittest.main()

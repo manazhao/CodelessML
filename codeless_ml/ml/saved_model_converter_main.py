@@ -16,14 +16,15 @@ flags.mark_flag_as_required("checkpoint_path")
 
 
 def main(argv):
-  del argv
-  tf.enable_eager_execution()
-  model = tf.keras.models.load_model(filepath=FLAGS.checkpoint_path)
-  model.summary()
-  logging.info("SavedModel path: %s" % (FLAGS.saved_model_path))
-  tf.contrib.saved_model.save_keras_model(
-      model, FLAGS.saved_model_path, serving_only=FLAGS.serving_only)
+    del argv
+    tf.enable_eager_execution()
+    model = tf.keras.models.load_model(filepath=FLAGS.checkpoint_path)
+    model.summary()
+    logging.info("SavedModel path: %s" % (FLAGS.saved_model_path))
+    tf.contrib.saved_model.save_keras_model(model,
+                                            FLAGS.saved_model_path,
+                                            serving_only=FLAGS.serving_only)
 
 
 if __name__ == "__main__":
-  app.run(main)
+    app.run(main)

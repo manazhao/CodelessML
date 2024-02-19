@@ -41,7 +41,7 @@ class KVCache(tf.keras.layers.Layer):
         from_idx = self._index.value()
         to_idx = from_idx + x.shape[1]
         # ensure we have enough space to hold the new key and values.
-        tf.debugging.assert_less(to_idx, self._max_seq_len)
+        tf.debugging.assert_less_equal(to_idx, self._max_seq_len)
         left_size, right_size = from_idx, self._max_seq_len - to_idx
         padded_x = tf.pad(x, [[0, 0], [left_size, right_size], [0, 0], [0, 0]])
         # replace the cache with the given key and value tensor.

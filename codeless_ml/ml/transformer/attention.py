@@ -14,10 +14,11 @@ class BaseAttention(tf.keras.layers.Layer):
 
 class CrossAttention(BaseAttention):
 
-    def call(self, x, context):
+    def call(self, x, context, reset_cache: tf.Tensor | None = None):
         attn_output, attn_scores = self.mha(query=x,
                                             key=context,
                                             value=context,
+                                            reset_cache=reset_cache,
                                             return_attention_scores=True)
         self.last_attn_scores = attn_scores
         x = self.add([x, attn_output])
@@ -27,8 +28,11 @@ class CrossAttention(BaseAttention):
 
 class GlobalSelfAttention(BaseAttention):
 
-    def call(self, x):
-        attn_output = self.mha(query=x, value=x, key=x)
+    def call(self, x, reset_cache: tf.Tensor | None = None):
+        attn_output = self.mha(query=x,
+                               value=x,
+                               key=x,
+                               reset_cache=reset_cache)
         x = self.add([x, attn_output])
         x = self.layernorm(x)
         return x
@@ -36,8 +40,12 @@ class GlobalSelfAttention(BaseAttention):
 
 class CausalSelfAttention(BaseAttention):
 
-    def call(self, x):
-        attn_output = self.mha(query=x, value=x, key=x, use_causal_mask=True)
+    def call(self, x, reset_cache: tf.Tensor | None = None):
+        attn_output = self.mha(query=x,
+                               value=x,
+                               key=x,
+                               use_causal_mask=True,
+                               reset_cache=reset_cache)
         x = self.add([x, attn_output])
         x = self.layernorm(x)
         return x

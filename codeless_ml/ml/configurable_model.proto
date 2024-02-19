@@ -123,6 +123,9 @@ message TransformerDecoder {
   int32 dff = 4;
   int32 vocab_size = 5;
   float dropout_rate = 6;
+  // When set, it means the decoder will be used in inference for decoding
+  // autoregressively.
+  int32 cache_max_seq_len = 7;
 }
 
 message TfHub {

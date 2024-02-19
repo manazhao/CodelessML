@@ -52,7 +52,8 @@ class CacheAttention(tf.keras.layers.MultiHeadAttention):
                                 value: tf.Tensor,
                                 key_mask: tf.Tensor | None = None,
                                 value_mask: tf.Tensor | None = None):
-        assert self._key_cache is not None and self._value_cache is not None, "cache objects must be created first."
+        assert self._key_cache is not None and self._value_cache is not None, \
+                "cache objects must be created first."
         return (self._key_cache(key, reset_cache, mask=key_mask),
                 self._value_cache(value, reset_cache, mask=value_mask))
 
