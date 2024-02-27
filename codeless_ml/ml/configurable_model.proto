@@ -47,8 +47,8 @@ message Conv2DLayer {
   int32 filters = 1;
   repeated int32 kernel_size = 2;
   repeated int32 strides = 3;
-  PaddingType padding = 4;
-  DataFormat data_format = 5;
+  optional PaddingType padding = 4;
+  optional DataFormat data_format = 5;
   bool use_bias = 6;
   ActivationType activation = 7;
 }
@@ -133,6 +133,18 @@ message TfHub {
   bool trainable = 2;
 }
 
+message Conv2DTranspose {
+  int32 filters = 1;
+  repeated int32 kernel_size = 2;
+  repeated int32 strides = 3;
+  optional PaddingType padding = 4;
+  ActivationType activation = 5;
+}
+
+message Reshape {
+  repeated int32 shape = 1;
+}
+
 message LayerConfig {
 
   message Dependency {
@@ -174,6 +186,8 @@ message LayerConfig {
     TfHub tf_hub = 19;
     codeless_ml.common.CallableRegistry custom_callable = 20;
     AddLayer add = 21;
+    Conv2DTranspose conv_2d_transpose = 22;
+    Reshape reshape = 23;
   }
 }
 

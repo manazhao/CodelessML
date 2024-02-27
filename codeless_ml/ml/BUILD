@@ -238,9 +238,11 @@ py_binary(
     srcs = ["train.py"],
     data = [
         "//codeless_ml/ml/artifacts:imagenette",
+        "//codeless_ml/ml/artifacts:mnist",
         "//codeless_ml/ml/artifacts:ted_hrlr_translate",
         "//codeless_ml/ml/artifacts:ted_hrlr_translate_pt_en_converter",
         "//codeless_ml/ml/examples:machine_translation",
+        "//codeless_ml/ml/examples:vae",
         "//codeless_ml/ml/examples:vit",
     ],
     deps = [

@@ -10,6 +10,13 @@ filegroup(
 )
 
 filegroup(
+    name = "mnist",
+    srcs = glob([
+        "mnist/**",
+    ]),
+)
+
+filegroup(
     name = "ted_hrlr_translate_pt_en_converter",
     srcs = glob([
         "ted_hrlr_translate_pt_en_converter/**",

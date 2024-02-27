@@ -8,6 +8,11 @@ filegroup(
 )
 
 filegroup(
+    name = "vae",
+    srcs = ["vae.prototext"],
+)
+
+filegroup(
     name = "vit",
     srcs = ["vit.prototext"],
 )

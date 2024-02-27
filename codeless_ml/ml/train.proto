@@ -3,6 +3,7 @@ syntax = "proto3";
 package codeless_ml.ml;
 
 import "codeless_ml/ml/configurable_model.proto";
+import "codeless_ml/common/callable.proto";
 import "codeless_ml/ml/input.proto";
 
 message FitConfig {
@@ -49,6 +50,10 @@ message TensorBoardConfig {
   }
 }
 
+message CustomCallbackConfig {
+  repeated codeless_ml.common.CallableRegistry registry = 1;
+}
+
 message LoadModelConfig {
   string architecture_path = 1;
   string weights_path = 2;
@@ -85,4 +90,6 @@ message ModelTrainerConfig {
   repeated string user_defined_python_module = 10;
 
   TensorBoardConfig tensor_board_config = 11;
+
+  CustomCallbackConfig custom_callback_config = 12;
 }

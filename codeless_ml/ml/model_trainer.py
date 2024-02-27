@@ -51,8 +51,7 @@ class ModelTrainer(object):
 
         if load_config.saved_model_path:
             self._configurable_model.model = \
-                tf.keras.experimental.load_from_saved_model(\
-                load_config.saved_model_path)
+                tf.keras.models.load_model(load_config.saved_model_path)
             return
 
         if load_config.architecture_path:
@@ -93,6 +92,16 @@ class ModelTrainer(object):
             write_grads=tensor_board_config.write_grads,
             update_freq=update_freq)
 
+    def _custom_callbacks(self, model, validation_data):
+        callbacks_config = self._trainer_config.custom_callback_config
+        callbacks = []
+        for registry in callbacks_config.registry:
+            callback = GVR.retrieve_callable(registry)
+            callback.set_model(model)
+            callback.validation_data = validation_data
+            callbacks.append(callback)
+        return callbacks
+
     def _checkpoint_callback(self):
         checkpoint_config = self._trainer_config.checkpoint_config
         return tf.keras.callbacks.ModelCheckpoint(
@@ -121,6 +130,10 @@ class ModelTrainer(object):
             callbacks.append(self._tensorboard_callback())
         if self._trainer_config.HasField("checkpoint_config"):
             callbacks.append(self._checkpoint_callback())
+        if self._trainer_config.HasField("custom_callback_config"):
+            callbacks.extend(
+                self._custom_callbacks(self._configurable_model.model,
+                                       self._validation_dataset))
         return self._configurable_model.model.fit(
             x=self._train_dataset,
             y=None,

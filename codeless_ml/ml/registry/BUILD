@@ -8,6 +8,7 @@ py_library(
     deps = [
         ":mnist",
         ":mtnt",
+        ":vae",
         ":vit",
     ],
 )
@@ -28,6 +29,16 @@ py_library(
         "@abseil-py//absl/logging",
         requirement("tensorflow"),
         "//codeless_ml/common:global_variable",
+    ],
+)
+
+py_library(
+    name = "vae",
+    srcs = ["vae.py"],
+    deps = [
+        "//codeless_ml/common:global_variable",
+        requirement("tensorflow"),
+        "@abseil-py//absl/logging",
     ],
 )
 
@@ -65,6 +76,18 @@ py_test(
         ":mnist",
         requirement("numpy"),
         requirement("tensorflow"),
+    ],
+)
+
+py_test(
+    name = "vae_test",
+    srcs = ["vae_test.py"],
+    deps = [
+        ":vae",
+        "//codeless_ml/common:callable_py_pb2",
+        "@com_google_protobuf//:protobuf_python",
+        requirement("tensorflow"),
+        requirement("numpy"),
     ],
 )
 

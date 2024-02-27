@@ -42,9 +42,6 @@ def main(argv):
                               download=True,
                               with_info=True)
     print(f"dataset info: {info}")
-    for batch in dataset:
-        print(f"sample {sample_cnt}: {batch}")
-        break
 
 
 if __name__ == "__main__":

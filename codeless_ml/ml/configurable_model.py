@@ -21,7 +21,8 @@ def _non_empty_string_or_none(value):
 
 
 def _padding_type_to_string(padding_type):
-    if padding_type == configurable_model_pb2.PADDING_TYPE_VALID:
+    if (padding_type == configurable_model_pb2.PADDING_TYPE_VALID or
+            padding_type == configurable_model_pb2.PADDING_TYPE_UNSPECIFIED):
         return "valid"
     elif padding_type == configurable_model_pb2.PADDING_TYPE_SAME:
         return "same"
@@ -34,7 +35,7 @@ def _data_format_to_string(data_format):
     elif data_format == configurable_model_pb2.DATA_FORMAT_CHANNELS_LAST:
         return "channels_last"
     else:
-        raise ValueError("invalid data format: %s" % (data_format))
+        return None
 
 
 def _activation_type_to_string(activation_type):
@@ -59,6 +60,8 @@ def _activation_type_to_string(activation_type):
     elif activation_type == configurable_model_pb2.ACTIVATION_TYPE_EXPONENTIAL:
         return "exponential"
     elif activation_type == configurable_model_pb2.ACTIVATION_TYPE_LINEAR:
+        return "linear"
+    elif activation_type == configurable_model_pb2.ACTIVATION_TYPE_UNSPECIFIED:
         return "linear"
     else:
         raise ValueError("invalid activation_type %s" % (activation_type))
@@ -284,6 +287,12 @@ class ConfigurableModel(object):
         elif layer_config.HasField("conv_2d"):
             layer = self._create_conv_2d_layer(layer_config.name,
                                                layer_config.conv_2d)
+        elif layer_config.HasField("conv_2d_transpose"):
+            layer = self._create_conv_2d_transpose_layer(
+                layer_config.name, layer_config.conv_2d_transpose)
+        elif layer_config.HasField("reshape"):
+            layer = self._create_reshape(layer_config.name,
+                                         layer_config.reshape)
         elif layer_config.HasField("max_pooling_2d"):
             layer = self._create_max_pooling_2d_layer(
                 layer_config.name, layer_config.max_pooling_2d)
@@ -378,6 +387,20 @@ class ConfigurableModel(object):
             batch_size=layer.batch_size if layer.batch_size else None,
             dtype=_non_empty_string_or_none(layer.dtype),
             sparse=layer.sparse)
+
+    def _create_reshape(self, name, layer):
+        return tf.keras.layers.Reshape(tuple(layer.shape))
+
+    def _create_conv_2d_transpose_layer(self, name, layer):
+        return tf.keras.layers.Conv2DTranspose(
+            name=name,
+            filters=layer.filters,
+            kernel_size=(tuple(layer.kernel_size) if len(layer.kernel_size) > 1
+                         else layer.kernel_size[0]),
+            strides=(tuple(layer.strides)
+                     if len(layer.strides) > 1 else layer.strides[0]),
+            padding=_padding_type_to_string(layer.padding),
+            activation=_activation_type_to_string(layer.activation))
 
     def _create_conv_2d_layer(self, name, layer):
         return tf.keras.layers.Conv2D(

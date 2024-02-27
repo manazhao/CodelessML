@@ -1,0 +1,162 @@
+user_defined_python_module: [
+  "codeless_ml.ml.registry.vae"
+]
+train_dataset {
+  tfds {
+      name: "mnist"
+      split: "train"
+      data_dir: "codeless_ml/ml/artifacts"
+  }
+  batch_size: 128
+  shuffle_buffer_size: 10000
+  pre_batch_map_callable {
+    function_name: "codeless_ml.ml.registry.vae.convert_to_binary_image"
+  }
+}
+validation_dataset {
+  tfds {
+      name: "mnist"
+      split: "test"
+      data_dir: "codeless_ml/ml/artifacts"
+  }
+  batch_size: 128
+  shuffle_buffer_size: 10000
+  pre_batch_map_callable {
+    function_name: "codeless_ml.ml.registry.vae.convert_to_binary_image"
+  }
+}
+
+fit_config {
+  epochs: 100
+}
+save_model_config {
+  output_directory: "/tmp/vae1"  
+}
+checkpoint_config {
+  filepath: "/tmp/vae1/cp-{epoch:04d}.ckpt"
+}
+
+tensor_board_config {
+  log_dir: "/tmp/vae1/tensorboard"
+  write_graph: true
+  samples: 20
+}
+
+custom_callback_config{
+  registry {
+    closure {
+      function_name: "codeless_ml.ml.registry.vae.create_plot_images_callback"
+      argument {
+        key: "log_dir"
+        value { string_value: "/tmp/vae1/tensorboard/reconstruct_images" }
+      }
+    }
+  }
+}
+
+model_config {
+  name: "vae"
+  description: "Variational Auto-Encoder"
+  adam_optimizer {
+    lr {
+      fixed_rate: 0.0001
+    }
+    beta_1: 0.9
+    beta_2: 0.98
+    epsilon: 1e-9
+  }
+  loss_config {
+    loss_spec {
+      custom_loss { function_name: "codeless_ml.ml.registry.vae.loss"}
+    }
+  }
+  metric_config {
+    metric_spec { standard_metric:  METRIC_TYPE_BINARY_ACCURACY}
+  }
+  layer {
+    name: "input_image"
+    input {
+      shape: [28, 28, 1]
+      dtype: "float32"
+      sparse: false
+    }
+  }
+  layer {
+    name: "conv2d_1"
+    conv_2d {
+      filters: 64
+      kernel_size: 4
+      strides: [2, 2]
+      activation: ACTIVATION_TYPE_RELU
+    }
+    dependency { name: "input_image" }
+  }
+  layer {
+    name: "conv2d_2"
+    conv_2d {
+      filters: 128
+      kernel_size: 4
+      strides: [2, 2]
+      activation: ACTIVATION_TYPE_RELU
+    }
+    dependency { name: "conv2d_1" }
+  }
+  layer {
+    name: "flatten"
+    flatten {}
+    dependency { name: "conv2d_2" }
+  }
+  layer {
+    name: "encoder_dense"
+    dense {
+      # 2 * latent_dim = 2 * 2
+      units: 4
+    }
+    dependency { name: "flatten" }
+  }
+  layer {
+    name: "latent_sample"
+    custom_callable {
+      closure { function_name: "codeless_ml.ml.registry.vae.create_layer" }
+    }
+    dependency { name: "encoder_dense" }
+  }
+  layer {
+    name: "decoder_dense"
+    dense {
+      # 7 * 7 * 2 * 64
+      units: 6272
+    }
+    dependency { name: "latent_sample" }
+  }
+  layer {
+    name: "decoder_reshape"
+    reshape {
+      shape: [7, 7, 128]
+    }
+    dependency { name: "decoder_dense" }
+  }
+  layer {
+    name: "decoder_deconv1"
+    conv_2d_transpose {
+      filters: 64
+      kernel_size: 4
+      strides: [2,2]
+      padding: PADDING_TYPE_SAME
+      activation: ACTIVATION_TYPE_RELU
+    }
+    dependency { name: "decoder_reshape" }
+  }
+  layer {
+    name: "decoder_deconv2"
+    conv_2d_transpose {
+      filters: 1
+      kernel_size: 4
+      strides: [2, 2]
+      padding: PADDING_TYPE_SAME
+      activation: ACTIVATION_TYPE_LINEAR
+    }
+    is_output: true
+    dependency { name: "decoder_deconv1" }
+  }
+}
